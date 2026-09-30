@@ -64,6 +64,8 @@ html, body { height: 100%; background: var(--paper); overscroll-behavior: none; 
 .sound:active { transform: scale(.97); }
 .sound .dot { width: 7px; height: 7px; }
 .sound.off .dot { background: var(--line-2); }
+.sound.alerts { margin-top: 0; }
+.sound.alerts .dot { background: var(--ink); }
 
 /* ready */
 .ready { background: var(--sig); }
@@ -128,7 +130,9 @@ html, body { height: 100%; background: var(--paper); overscroll-behavior: none; 
       <div class="eta"><span>Estimated wait</span><span id="eta">~10 min</span></div>
       <div class="bar"><div id="progress"></div></div>
       <button class="sound" id="sound" type="button"><span class="dot"></span><span id="soundLabel">Sound and vibration on</span></button>
-      <div class="fine" style="margin-top:0">Keep this page open. Put your phone down.</div>
+      <button class="sound alerts" id="alerts" type="button" hidden><span class="dot"></span>Alert me on the lock screen</button>
+      <div class="fine" id="iosHint" style="margin-top:0" hidden>iPhone: tap Share → Add to Home Screen to get alerts when your phone is locked.</div>
+      <div class="fine" id="keepOpen" style="margin-top:0">Keep this page open. Put your phone down.</div>
     </div>
   </section>
 

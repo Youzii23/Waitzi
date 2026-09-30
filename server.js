@@ -15,6 +15,25 @@ const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'state.j
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DEFAULT_ETA = 600;
 
+// ---------- web push (lock-screen alerts) ----------
+// Keys come from the environment, or are generated once and kept next to the data file.
+const webpush = require('web-push');
+const VAPID_FILE = path.join(path.dirname(DATA_FILE), 'vapid.json');
+let vapid = null;
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  vapid = { publicKey: process.env.VAPID_PUBLIC_KEY, privateKey: process.env.VAPID_PRIVATE_KEY };
+} else {
+  try { vapid = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')); } catch (e) {
+    vapid = webpush.generateVAPIDKeys();
+    fs.mkdirSync(path.dirname(VAPID_FILE), { recursive: true });
+    fs.writeFileSync(VAPID_FILE, JSON.stringify(vapid));
+  }
+}
+// Apple rejects push from a localhost subject, so prefer a real https address or a mailto.
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT
+  || (/^https:\/\//.test(PUBLIC_URL) ? PUBLIC_URL : 'mailto:waitzi@example.com');
+webpush.setVapidDetails(VAPID_SUBJECT, vapid.publicKey, vapid.privateKey);
+
 // ---------- state ----------
 function today() {
   const d = new Date();
@@ -117,6 +136,35 @@ setInterval(() => {
   for (const set of orderClients.values()) for (const res of set) res.write(': ping\n\n');
 }, 20000).unref();
 
+// Page the customer's phone through the push service, for when the page is asleep or closed.
+const pusher = {
+  send: (sub, payload) => webpush.sendNotification(sub, payload, { TTL: 300, urgency: 'high', topic: 'ready' }),
+};
+
+function pushReady(n) {
+  const o = find(n);
+  if (!o || !o.subs || !o.subs.length) return;
+  const payload = JSON.stringify({
+    title: 'Order ' + o.n + ' is ready',
+    body: 'Come pick it up at the counter.',
+    n: o.n, pages: o.pages,
+  });
+  for (const sub of o.subs.slice()) {
+    Promise.resolve().then(() => pusher.send(sub, payload)).catch(err => {
+      // The browser dropped the subscription: forget it.
+      if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+        o.subs = o.subs.filter(s => s.endpoint !== sub.endpoint);
+        save();
+      } else console.warn('push failed for #' + o.n + ':', err && (err.statusCode || err.message));
+    });
+  }
+}
+
+function validSubscription(sub) {
+  return sub && typeof sub.endpoint === 'string' && /^https:\/\//.test(sub.endpoint) && sub.endpoint.length < 1000
+    && sub.keys && typeof sub.keys.p256dh === 'string' && typeof sub.keys.auth === 'string';
+}
+
 // ---------- actions ----------
 const actions = {
   create({ name, eta } = {}) {
@@ -150,7 +198,7 @@ const actions = {
   collect(n) {
     const o = find(n);
     if (!o) return false;
-    o.status = 'done'; o.collectedAt = Date.now();
+    o.status = 'done'; o.collectedAt = Date.now(); o.subs = [];
     state.collectedToday += 1;
     return true;
   },
@@ -209,7 +257,7 @@ async function handle(req, res) {
   const p = url.pathname;
   let m;
 
-  if (p === '/api/config') return json(res, 200, { venue: VENUE, signal: SIGNAL, staffAuth: !!STAFF_KEY, url: baseUrl(req) });
+  if (p === '/api/config') return json(res, 200, { venue: VENUE, signal: SIGNAL, staffAuth: !!STAFF_KEY, url: baseUrl(req), pushKey: vapid.publicKey });
 
   // Staff API
   if (p.startsWith('/api/staff/')) {
@@ -231,6 +279,7 @@ async function handle(req, res) {
       const n = Number(m[1]);
       if (!actions[m[2]](n)) return json(res, 409, { error: 'order not in a state for that' });
       save(); broadcast(n);
+      if (m[2] === 'ready' || m[2] === 'page') pushReady(n);
       return json(res, 200, { ok: true });
     }
     return json(res, 404, { error: 'not found' });
@@ -243,6 +292,16 @@ async function handle(req, res) {
     o.phone = true;
     save(); broadcast(o.n);
     return json(res, 200, { now: Date.now(), order: publicOrder(o) });
+  }
+  if ((m = p.match(/^\/api\/orders\/(\d{1,3})\/subscribe$/)) && req.method === 'POST') {
+    const o = find(Number(m[1]));
+    if (!o) return json(res, 404, { error: 'not found' });
+    const { subscription } = await readBody(req);
+    if (!validSubscription(subscription)) return json(res, 400, { error: 'bad subscription' });
+    const sub = { endpoint: subscription.endpoint, keys: { p256dh: subscription.keys.p256dh, auth: subscription.keys.auth } };
+    o.subs = (o.subs || []).filter(s => s.endpoint !== sub.endpoint).concat(sub).slice(-3);
+    save();
+    return json(res, 200, { ok: true });
   }
   if ((m = p.match(/^\/api\/orders\/(\d{1,3})\/collect$/)) && req.method === 'POST') {
     const n = Number(m[1]);
@@ -295,4 +354,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, actions, state: () => state };
+module.exports = { server, actions, pusher, state: () => state };

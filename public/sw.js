@@ -1,6 +1,6 @@
 // Waitzi service worker: caches the app shell so the page opens on a flaky connection,
 // and lets the page show a system notification when the order is ready.
-const CACHE = 'waitzi-v1';
+const CACHE = 'waitzi-v2';
 const SHELL = ['/', '/app.css', '/common.js', '/customer.js', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', e => {
@@ -26,10 +26,30 @@ self.addEventListener('fetch', e => {
   );
 });
 
+// Lock-screen alert. If the page is on screen it already beeps and lights up, so stay quiet.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) {}
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    if (list.some(c => c.visibilityState === 'visible')) return;
+    return self.registration.showNotification(d.title || 'Your order is ready', {
+      body: d.body || 'Come pick it up at the counter.',
+      tag: 'waitzi-ready',
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [70, 90, 70, 90, 260],
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { n: d.n },
+    });
+  }));
+});
+
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
     const c = list.find(x => new URL(x.url).pathname === '/');
-    return c ? c.focus() : self.clients.openWindow('/');
+    const n = e.notification.data && e.notification.data.n;
+    return c ? c.focus() : self.clients.openWindow(n ? '/?o=' + n : '/');
   }));
 });

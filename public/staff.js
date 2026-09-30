@@ -69,8 +69,43 @@
     hideToast();
     api('/orders/' + t.n + '/undo').catch(() => {});
   }
-  $('new').addEventListener('click', () => {
-    api('/orders').then(d => toast('#' + d.n + ' added · write it on the receipt', d.n, false)).catch(() => {});
+  // ---------- new order sheet: optional name + estimated time ----------
+  const ETAS = [5, 8, 10, 12, 15];
+  let eta = Number(W.store.get('eta')) || 10;
+  if (!ETAS.includes(eta)) eta = 10;
+  ETAS.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'eta press'; b.textContent = m + ' min';
+    b.setAttribute('role', 'radio');
+    b.addEventListener('click', () => { eta = m; W.store.set('eta', String(m)); paintEtas(); });
+    $('etas').appendChild(b);
+  });
+  function paintEtas() {
+    [...$('etas').children].forEach((b, i) => b.setAttribute('aria-checked', String(ETAS[i] === eta)));
+  }
+  function openSheet() {
+    $('name').value = '';
+    paintEtas();
+    $('sheet').hidden = $('scrim').hidden = false;
+    $('new').setAttribute('aria-expanded', 'true');
+    // Only jump into the field with a real keyboard; on a tablet the on-screen keyboard would cover the list.
+    if (matchMedia('(pointer: fine)').matches) $('name').focus();
+  }
+  function closeSheet() {
+    $('sheet').hidden = $('scrim').hidden = true;
+    $('new').setAttribute('aria-expanded', 'false');
+  }
+  $('new').addEventListener('click', () => ($('sheet').hidden ? openSheet() : closeSheet()));
+  $('scrim').addEventListener('click', closeSheet);
+  $('cancel').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('sheet').hidden) closeSheet(); });
+  $('sheet').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('name').value.trim();
+    $('name').blur();
+    closeSheet();
+    api('/orders', { name, eta: eta * 60 })
+      .then(d => toast('#' + d.n + (name ? ' · ' + name : '') + ' added · write it on the receipt', d.n, false)).catch(() => {});
   });
   $('undo').addEventListener('click', undo);
 

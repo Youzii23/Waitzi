@@ -80,6 +80,24 @@ html, body { height: 100%; background: var(--paper-2); }
 @keyframes wz-toast { from { opacity: 0; transform: translate(-50%, 16px) } to { opacity: 1; transform: translate(-50%, 0) } }
 .toast.in { animation: wz-toast .3s var(--ease) both; }
 
+/* new order sheet */
+.scrim { position: fixed; inset: 0; background: rgba(20,20,19,.18); z-index: 20; animation: wz-fade .2s ease-out both; }
+.sheet { position: absolute; top: 80px; right: 28px; z-index: 21; width: min(420px, calc(100% - 32px)); padding: 22px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 48px -16px rgba(20,20,19,.3); display: flex; flex-direction: column; gap: 10px; animation: wz-rise .3s var(--ease) both; }
+.sheet .lbl { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.sheet .lbl span { font-weight: 400; color: var(--stone); text-transform: none; letter-spacing: 0; margin-left: 6px; }
+.sheet .lbl:not(:first-child) { margin-top: 8px; }
+.sheet input { height: 60px; border: 1px solid var(--line-2); border-radius: 14px; padding: 0 16px; font: 600 20px var(--sans); background: #fff; color: var(--ink); }
+.sheet input::placeholder { color: var(--line-2); }
+.sheet input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.etas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.eta { height: 56px; padding: 0; border-radius: 14px; background: var(--key); font: 600 15px var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.eta[aria-checked="true"] { background: var(--ink); color: var(--paper-2); }
+.acts { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 10px; }
+.cancel { height: 64px; border: 1px solid var(--line-2); border-radius: 16px; background: transparent; font: 600 16px var(--sans); }
+.add { height: 64px; border-radius: 16px; background: var(--ink); color: var(--paper-2); font: 600 17px var(--sans); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.add .dot { width: 8px; height: 8px; }
+@media (max-width: 760px) { .sheet { top: 130px; right: 16px; } }
+
 /* staff key gate */
 .gate { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .gate form { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; }
@@ -125,9 +143,21 @@ html, body { height: 100%; background: var(--paper-2); }
     <div class="right">
       <div class="conn" id="conn" hidden><span class="dot led"></span>Reconnecting…</div>
       <div class="clock" id="clock">--:--</div>
-      <button class="new" id="new" type="button"><b>+</b>New order</button>
+      <button class="new" id="new" type="button" aria-haspopup="dialog" aria-expanded="false"><b>+</b>New order</button>
     </div>
   </header>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <form class="sheet" id="sheet" hidden role="dialog" aria-label="New order" autocomplete="off">
+    <label class="lbl" for="name">Name <span>optional</span></label>
+    <input id="name" name="name" maxlength="40" placeholder="Walk-in" enterkeyhint="done">
+    <div class="lbl">Estimated time</div>
+    <div class="etas" id="etas" role="radiogroup"></div>
+    <div class="acts">
+      <button type="button" class="cancel press" id="cancel">Cancel</button>
+      <button type="submit" class="add press"><span class="dot"></span>Add order</button>
+    </div>
+  </form>
 
   <div class="cols">
     <section class="col prep">

@@ -8,7 +8,7 @@ const fs = require('fs');
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'waitzi-'));
 process.env.DATA_FILE = path.join(dir, 'state.json');
 process.env.STAFF_KEY = 'secret';
-const { server } = require('../server');
+const { server, pusher } = require('../server');
 
 let base;
 test.before(() => new Promise(r => server.listen(0, () => { base = 'http://127.0.0.1:' + server.address().port; r(); })));
@@ -92,6 +92,40 @@ test('undo returns a paged order to preparing', async () => {
 test('customer cannot collect an order that is not ready', async () => {
   const { body: { n } } = await staff('/orders');
   assert.strictEqual((await fetch(base + '/api/orders/' + n + '/collect', { method: 'POST' })).status, 409);
+});
+
+test('ready and page again push to subscribed phones; dead subscriptions are dropped', async () => {
+  const sent = [];
+  pusher.send = async (sub, payload) => {
+    sent.push([sub.endpoint, JSON.parse(payload)]);
+    if (sub.endpoint.endsWith('/gone')) { const e = new Error('gone'); e.statusCode = 410; throw e; }
+  };
+  const { body: { n } } = await staff('/orders', { name: 'Ida', eta: 480 });
+  const sub = ep => fetch(base + '/api/orders/' + n + '/subscribe', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscription: { endpoint: ep, keys: { p256dh: 'k', auth: 'a' } } }),
+  });
+  assert.strictEqual((await sub('http://insecure.example/x')).status, 400);
+  assert.strictEqual((await sub('https://push.example/ok')).status, 200);
+  assert.strictEqual((await sub('https://push.example/gone')).status, 200);
+
+  await staff('/orders/' + n + '/ready');
+  await new Promise(r => setTimeout(r, 30));
+  assert.deepStrictEqual(sent.map(x => x[0]).sort(), ['https://push.example/gone', 'https://push.example/ok']);
+  assert.strictEqual(sent[0][1].title, 'Order ' + n + ' is ready');
+
+  sent.length = 0;
+  await staff('/orders/' + n + '/page');
+  await new Promise(r => setTimeout(r, 30));
+  assert.deepStrictEqual(sent.map(x => x[0]), ['https://push.example/ok']);
+  assert.strictEqual(sent[0][1].pages, 2);
+
+  const cfg = await (await fetch(base + '/api/config')).json();
+  assert.match(cfg.pushKey, /^[A-Za-z0-9_-]{80,}$/);
+  const state = await (await fetch(base + '/api/staff/state', { headers: { 'X-Staff-Key': 'secret' } })).json();
+  const o = state.orders.find(x => x.n === n);
+  assert.strictEqual(o.eta, 480);
+  assert.strictEqual(o.subs, undefined); // subscriptions never leave the server
 });
 
 test('serves pages and the QR code', async () => {
