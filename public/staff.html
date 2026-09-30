@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBFAF8">
+<meta name="robots" content="noindex">
+<title>Waitzi · Counter</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;800;900&family=Geist+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/app.css">
+<style>
+html, body { height: 100%; background: var(--paper-2); }
+.dash { min-height: 100%; min-height: 100dvh; position: relative; display: flex; flex-direction: column; background: var(--paper-2); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; padding-top: calc(18px + env(safe-area-inset-top)); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.bar .left { display: flex; align-items: center; gap: 16px; }
+.bar .logo { font-size: 22px; }
+.bar .logo .dot { width: 6px; height: 6px; }
+.vr { width: 1px; height: 20px; background: var(--line); }
+.venue { font: 500 15px var(--sans); color: var(--stone); }
+.bar .right { display: flex; align-items: center; gap: 20px; }
+.clock { font: 500 15px var(--mono); color: var(--stone); }
+.conn { display: flex; align-items: center; gap: 8px; font: 500 12px var(--mono); color: var(--stone); }
+.conn .dot { width: 8px; height: 8px; background: var(--ink); }
+.new { height: 52px; padding: 0 22px; border-radius: 14px; background: var(--ink); color: var(--paper-2); font: 600 16px var(--sans); display: flex; align-items: center; gap: 10px; }
+.new:hover { background: var(--ink-2); }
+.new:active { transform: scale(.97); }
+.new b { font-size: 22px; line-height: 1; margin-top: -2px; font-weight: 600; }
+
+.cols { flex: 1; display: grid; grid-template-columns: 1.5fr 1fr; min-height: 0; }
+.col { padding: 22px 28px; display: flex; flex-direction: column; min-width: 0; }
+.col.prep { border-right: 1px solid var(--line); }
+.col.ready { background: var(--paper-3); }
+.head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
+.head .t { font: 600 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.head .c { font: 500 13px var(--mono); color: var(--stone); }
+
+.prow { display: grid; grid-template-columns: 84px minmax(0,1fr) auto; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.prow .num { font-size: 50px; }
+.prow .info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.prow .title { font: 600 17px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prow .meta { display: flex; flex-direction: column; gap: 2px; font: 500 13px var(--mono); color: var(--stone); }
+.prow .meta span { white-space: nowrap; }
+.prow .late { color: var(--sig-deep); }
+.mark { height: 64px; min-width: 148px; padding: 0 20px; border-radius: 16px; background: var(--ink); color: var(--paper-2); font: 600 17px var(--sans); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.mark:hover { background: var(--ink-2); }
+.mark .dot { width: 8px; height: 8px; }
+
+.rrow { display: flex; flex-direction: column; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.rrow .line { display: flex; align-items: center; gap: 14px; }
+.rrow .led { width: 10px; height: 10px; box-shadow: 0 0 0 4px var(--sig-glow); }
+.rrow .num { font-size: 40px; }
+.rrow .info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rrow .title { font: 600 16px var(--sans); }
+.rrow .meta { font: 500 12px var(--mono); color: var(--stone); }
+.rrow .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.again { height: 56px; border: 1px solid var(--line-2); border-radius: 14px; background: transparent; font: 600 15px var(--sans); }
+.again:hover { background: var(--bg); }
+.collect { height: 56px; border-radius: 14px; background: var(--key); font: 600 15px var(--sans); }
+.collect:hover { background: var(--key-2); }
+
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 60px 20px; text-align: center; }
+.empty .num { font-size: 64px; color: var(--line-2); }
+.empty .h { font: 600 18px var(--sans); }
+.empty .p { font: 400 15px var(--sans); color: var(--stone); }
+.col.ready .empty .h { font-size: 17px; }
+.col.ready .empty .p { font-size: 14px; }
+
+.footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 28px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); font: 400 12px var(--mono); color: var(--stone); }
+.footer a { color: var(--stone); }
+
+.toast { position: fixed; left: 50%; bottom: calc(64px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 20px; padding: 10px 10px 10px 20px; min-height: 64px; background: var(--ink); color: var(--paper-2); border-radius: 16px; box-shadow: 0 12px 32px rgba(20,20,19,.22); white-space: nowrap; z-index: 10; }
+.toast.noundo { padding-right: 20px; }
+.toast .dot { width: 8px; height: 8px; }
+.toast .txt { font: 600 15px var(--sans); }
+.toast button { height: 44px; padding: 0 16px; border-radius: 10px; background: var(--ink-2); color: var(--sig); font: 600 15px var(--sans); }
+.toast button:hover { background: var(--ink-3); }
+@keyframes wz-toast { from { opacity: 0; transform: translate(-50%, 16px) } to { opacity: 1; transform: translate(-50%, 0) } }
+.toast.in { animation: wz-toast .3s var(--ease) both; }
+
+/* staff key gate */
+.gate { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.gate form { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; }
+.gate .logo { font-size: 32px; }
+.gate .logo .dot { width: 8px; height: 8px; }
+.gate label { font: 500 13px var(--mono); color: var(--stone); letter-spacing: .06em; text-transform: uppercase; margin-top: 18px; }
+.gate input { height: 56px; border: 1px solid var(--line-2); border-radius: 14px; padding: 0 16px; font: 500 18px var(--mono); background: #fff; color: var(--ink); }
+.gate input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.gate button { height: 56px; border-radius: 14px; background: var(--ink); color: var(--paper-2); font: 600 16px var(--sans); }
+.gate .err { font: 500 14px var(--sans); color: var(--sig-deep); min-height: 20px; }
+
+@media (max-width: 760px) {
+  .cols { grid-template-columns: 1fr; }
+  .col.prep { border-right: none; border-bottom: 1px solid var(--line); }
+  .bar, .col, .footer { padding-left: 16px; padding-right: 16px; }
+  .prow { grid-template-columns: 64px minmax(0,1fr) auto; gap: 12px; }
+  .prow .num { font-size: 40px; }
+  .mark { min-width: 0; padding: 0 16px; }
+  .clock { display: none; }
+  .toast { max-width: calc(100% - 32px); white-space: normal; }
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <form id="gateForm">
+    <div class="logo">waitzi<span class="dot"></span></div>
+    <label for="key">Staff key</label>
+    <input id="key" type="password" autocomplete="current-password" required>
+    <div class="err" id="gateErr"></div>
+    <button type="submit" class="press">Open counter</button>
+  </form>
+</div>
+
+<div class="dash" id="dash" hidden>
+  <header class="bar">
+    <div class="left">
+      <div class="logo">waitzi<span class="dot"></span></div>
+      <div class="vr"></div>
+      <div class="venue" data-venue>&nbsp;</div>
+    </div>
+    <div class="right">
+      <div class="conn" id="conn" hidden><span class="dot led"></span>Reconnecting…</div>
+      <div class="clock" id="clock">--:--</div>
+      <button class="new" id="new" type="button"><b>+</b>New order</button>
+    </div>
+  </header>
+
+  <div class="cols">
+    <section class="col prep">
+      <div class="head"><div class="t">Preparing</div><div class="c" id="prepCount">0</div></div>
+      <div id="prepList"></div>
+      <div class="empty" id="prepEmpty" hidden>
+        <div class="num">00</div>
+        <div class="h">Nothing cooking</div>
+        <div class="p">Tap New order when a ticket comes in.</div>
+      </div>
+    </section>
+    <section class="col ready">
+      <div class="head"><div class="t">Ready at counter</div><div class="c" id="readyCount">0</div></div>
+      <div id="readyList"></div>
+      <div class="empty" id="readyEmpty" hidden>
+        <span class="dot" style="width:10px;height:10px;background:var(--line-2)"></span>
+        <div class="h">Counter is clear</div>
+        <div class="p">Orders you mark ready wait here until collected.</div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <span><span id="collected">0</span> collected today · <a href="/card" target="_blank">Counter card</a></span>
+    <span>On phone = paged automatically · Call out = shout the number</span>
+  </footer>
+
+  <div class="toast" id="toast" hidden role="status">
+    <span class="dot"></span><span class="txt" id="toastText"></span>
+    <button type="button" id="undo" class="press">Undo</button>
+  </div>
+</div>
+
+<script src="/common.js"></script>
+<script src="/staff.js"></script>
+</body>
+</html>

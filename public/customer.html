@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F2ED">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Waitzi">
+<meta name="description" content="No pager. Your phone becomes the pager.">
+<title>Waitzi</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;800;900&family=Geist+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/app.css">
+<style>
+html, body { height: 100%; background: var(--paper); overscroll-behavior: none; }
+#app { position: relative; min-height: 100%; min-height: 100dvh; max-width: 480px; margin: 0 auto; overflow: hidden; background: var(--paper); }
+#app.buzz { animation: wz-buzz .8s linear; }
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column;
+  padding: calc(16px + env(safe-area-inset-top)) 24px calc(34px + env(safe-area-inset-bottom)); }
+.top { display: flex; justify-content: space-between; align-items: center; font: 500 13px var(--sans); color: var(--stone); }
+.top .logo { font-size: 15px; color: var(--ink); gap: 1px; }
+.top .logo .dot { width: 4px; height: 4px; }
+
+/* join */
+.q { margin-top: 28px; font: 700 30px/1.08 var(--sans); letter-spacing: -.03em; }
+.hint { margin-top: 8px; font: 400 15px var(--sans); color: var(--stone); }
+.entry { flex: 1; min-height: 120px; display: flex; align-items: center; justify-content: center; font: 800 112px/1 var(--dots); letter-spacing: -.02em; color: var(--line-2); }
+.entry.has { color: var(--ink); }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.key { height: 58px; border-radius: 16px; background: var(--key); font: 500 26px var(--sans); transition: transform .1s, background .1s; }
+.key:active { transform: scale(.93); background: var(--key-2); }
+.key.ghost { background: transparent; }
+.key.blank { visibility: hidden; }
+.start { margin-top: 14px; height: 60px; border-radius: 18px; background: var(--key); color: var(--muted); font: 600 17px var(--sans); transition: transform .12s, background .2s; }
+.start.on { background: var(--ink); color: var(--paper); }
+.start:active { transform: scale(.97); }
+.fine { margin-top: 12px; text-align: center; font: 400 12px var(--mono); color: var(--stone); }
+
+/* waiting */
+.offline { margin-top: 12px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--key); font: 500 14px var(--sans); }
+.offline .dot { width: 8px; height: 8px; background: var(--ink); }
+.mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.radar { position: relative; height: 120px; }
+.radar .ring { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; border-radius: 50%; border: 1.5px solid var(--dotc, var(--ink)); opacity: 0; animation: wz-ring 3.6s cubic-bezier(.2,.6,.3,1) infinite; }
+.radar .ring + .ring { animation-delay: 1.8s; }
+.radar .core { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--dotc, var(--ink)); transition: background .6s; }
+.almost { --dotc: var(--sig); }
+.label { text-align: center; font: 500 12px var(--mono); letter-spacing: .16em; color: var(--stone); }
+.bignum { text-align: center; font: 800 150px/1 var(--dots); letter-spacing: -.03em; margin-top: 4px; }
+.headline { text-align: center; margin-top: 22px; font: 700 26px/1.15 var(--sans); letter-spacing: -.025em; }
+.sub { text-align: center; margin-top: 8px; font: 400 16px/1.4 var(--sans); color: var(--stone); }
+.foot { display: flex; flex-direction: column; gap: 10px; }
+.eta { display: flex; justify-content: space-between; align-items: baseline; }
+.eta span:first-child { font: 500 13px var(--sans); color: var(--stone); }
+.eta span:last-child { font: 700 24px var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.bar div { height: 100%; width: 0; background: var(--ink); transition: width 1s linear; }
+.sound { margin-top: 10px; height: 48px; border: 1px solid var(--line-2); border-radius: 14px; background: transparent; font: 500 14px var(--sans); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sound:active { transform: scale(.97); }
+.sound .dot { width: 7px; height: 7px; }
+.sound.off .dot { background: var(--line-2); }
+
+/* ready */
+.ready { background: var(--sig); }
+.ready .glow { position: absolute; inset: 0; background: radial-gradient(circle at 50% 44%, rgba(255,255,255,.6), rgba(255,255,255,0) 62%); animation: wz-breathe 3s ease-in-out 1.3s infinite; opacity: .3; }
+.ready .inner { position: absolute; inset: 0; display: flex; flex-direction: column; padding: inherit; }
+.ready .top { color: var(--ink); font-weight: 600; }
+.ready .top .dot { background: var(--ink); }
+.ready .mid { align-items: center; text-align: center; }
+.ready .label { color: var(--ink); font-weight: 600; animation: wz-rise .5s var(--ease) .2s both; }
+.ready .bignum { font-weight: 900; font-size: 196px; margin-top: 0; animation: wz-pop .9s cubic-bezier(.3,1.4,.4,1) .3s both; }
+.ready h1 { margin: 18px 0 0; font: 800 40px/1 var(--sans); letter-spacing: -.04em; animation: wz-rise .6s var(--ease) .55s both; }
+.ready p { margin: 14px 0 0; font: 500 17px var(--sans); animation: wz-rise .6s var(--ease) .7s both; }
+.got { height: 64px; border-radius: 20px; background: var(--ink); color: var(--paper); font: 600 18px var(--sans); display: flex; align-items: center; justify-content: center; gap: 10px; animation: wz-rise .6s var(--ease) .9s both; transition: transform .12s; }
+.got:active { transform: scale(.97); }
+.ignite { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+
+/* done / not found */
+.enjoy { font: 800 52px/1 var(--sans); letter-spacing: -.045em; }
+.meta { font: 500 13px var(--mono); color: var(--stone); }
+.ghostbtn { height: 56px; border: 1px solid var(--line-2); border-radius: 18px; background: transparent; font: 600 16px var(--sans); }
+.ghostbtn:active, .inkbtn:active { transform: scale(.97); }
+.missing { font: 800 110px/1 var(--dots); color: var(--line-2); }
+.nf { font: 700 28px/1.1 var(--sans); letter-spacing: -.03em; }
+.nfsub { font: 400 16px/1.4 var(--sans); color: var(--stone); text-wrap: pretty; }
+.inkbtn { height: 60px; border-radius: 18px; background: var(--ink); color: var(--paper); font: 600 17px var(--sans); }
+.gap14 { gap: 14px; }
+
+@media (max-height: 700px) {
+  .q { margin-top: 16px; font-size: 26px; }
+  .entry { font-size: 88px; min-height: 96px; }
+  .key { height: 52px; }
+  .bignum { font-size: 120px; }
+  .ready .bignum { font-size: 150px; }
+  .radar { height: 90px; }
+}
+</style>
+</head>
+<body>
+<main id="app">
+
+  <section class="screen fade" data-view="join">
+    <div class="top"><span data-venue>&nbsp;</span><span class="logo">waitzi<span class="dot"></span></span></div>
+    <div class="q">What's your<br>order number?</div>
+    <div class="hint">It's on your receipt.</div>
+    <div class="entry" id="entry" aria-live="polite">––</div>
+    <div class="keys" id="keys"></div>
+    <button class="start" id="start" type="button">Start waiting</button>
+    <div class="fine">No app. No sign-up.</div>
+  </section>
+
+  <section class="screen fade" data-view="waiting" hidden>
+    <div class="top"><span data-venue>&nbsp;</span><span class="logo">waitzi<span class="dot"></span></span></div>
+    <div class="offline" id="offline" hidden><span class="dot led"></span>Reconnecting… your place is saved.</div>
+    <div class="mid" id="waitMid">
+      <div class="radar"><span class="ring"></span><span class="ring"></span><span class="core"></span></div>
+      <div class="label">ORDER</div>
+      <div class="bignum" data-num>42</div>
+      <div class="headline" id="headline">We're preparing your order.</div>
+      <div class="sub" id="sub">We'll buzz you when it's ready.</div>
+    </div>
+    <div class="foot">
+      <div class="eta"><span>Estimated wait</span><span id="eta">~10 min</span></div>
+      <div class="bar"><div id="progress"></div></div>
+      <button class="sound" id="sound" type="button"><span class="dot"></span><span id="soundLabel">Sound and vibration on</span></button>
+      <div class="fine" style="margin-top:0">Keep this page open. Put your phone down.</div>
+    </div>
+  </section>
+
+  <section class="screen ready" data-view="ready" hidden role="alert">
+    <div class="glow"></div>
+    <div class="inner">
+      <div class="top"><span data-venue>&nbsp;</span><span class="logo">waitzi<span class="dot"></span></span></div>
+      <div class="mid">
+        <div class="label">ORDER</div>
+        <div class="bignum" data-num id="readyNum">42</div>
+        <h1>Your order<br>is ready</h1>
+        <p>Come pick it up at the counter.</p>
+      </div>
+      <button class="got" id="got" type="button">I've got it <span style="font-size:20px">→</span></button>
+    </div>
+    <div class="ignite" id="ignite"></div>
+  </section>
+
+  <section class="screen fade" data-view="done" hidden>
+    <div class="top"><span data-venue>&nbsp;</span><span class="logo">waitzi<span class="dot"></span></span></div>
+    <div class="mid gap14" style="display:flex">
+      <div class="enjoy">Enjoy<br>your meal.</div>
+      <div class="meta">Order <span data-num>42</span> · collected <span id="collectedAt">--:--</span></div>
+    </div>
+    <button class="ghostbtn" id="another" type="button">Wait for another order</button>
+  </section>
+
+  <section class="screen fade" data-view="notfound" hidden>
+    <div class="top"><span data-venue>&nbsp;</span></div>
+    <div class="mid gap14" style="display:flex">
+      <div class="missing" id="missing">99</div>
+      <div class="nf">We can't find<br>that order.</div>
+      <div class="nfsub">Check the number on your receipt, or ask at the counter.</div>
+    </div>
+    <button class="inkbtn" id="retry" type="button">Try again</button>
+  </section>
+
+</main>
+<script src="/common.js"></script>
+<script src="/customer.js"></script>
+</body>
+</html>

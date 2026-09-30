@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;800;900&family=Geist+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;background:#EEEBE5;color:#141413;font-family:'Schibsted Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#141413;text-decoration-thickness:1px;text-underline-offset:3px}a:hover{color:#6E6B65}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+@keyframes wz-ring{0%{transform:translate(-50%,-50%) scale(.12);opacity:.6}70%{opacity:.08}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+@keyframes wz-ignite{0%{opacity:.95}12%{opacity:0}18%{opacity:.6}30%{opacity:0}100%{opacity:0}}
+@keyframes wz-breathe{0%,100%{opacity:.3}50%{opacity:.9}}
+@keyframes wz-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes wz-pop{0%{transform:scale(.86);opacity:0}25%{opacity:1}55%{transform:scale(1.045)}100%{transform:scale(1)}}
+@keyframes wz-buzz{0%,15%,32%,72%,100%{transform:none}5%{transform:translateX(-2px)}10%{transform:translateX(2px)}22%{transform:translateX(-2px)}27%{transform:translateX(2px)}45%{transform:translateX(-3px) rotate(-.4deg)}50%{transform:translateX(3px) rotate(.4deg)}55%{transform:translateX(-3px)}60%{transform:translateX(3px)}65%{transform:translateX(-2px)}}
+@keyframes wz-led{0%,49%{opacity:1}50%,100%{opacity:.18}}
+@keyframes wz-fade{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+
+<div style="max-width:1480px;margin:0 auto;padding:40px 40px 24px;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:baseline;gap:3px;font:800 44px/1 'Schibsted Grotesk';letter-spacing:-.04em">waitzi<span style="width:11px;height:11px;border-radius:50%;background:{{ sig }};display:inline-block"></span></div>
+    <div style="font:500 20px/1.3 'Schibsted Grotesk';letter-spacing:-.01em">No pager. Your phone becomes the pager.</div>
+  </div>
+  <div style="font:400 13px/1.5 'Geist Mono',monospace;color:#6E6B65;max-width:420px;text-wrap:pretty">Live prototype. Enter 42 on the phone, then press Mark ready on #42 in the dashboard. Turn your volume up.</div>
+</div>
+
+<div data-screen-label="Prototype" style="max-width:1480px;margin:0 auto;padding:0 40px 56px;display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+  <div style="flex:1 1 640px;min-width:0;min-height:804px;background:#FBFAF8;border:1px solid #E2DED6;border-radius:24px;overflow:hidden;position:relative;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px;border-bottom:1px solid #E2DED6;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="display:flex;align-items:baseline;gap:2px;font:800 22px/1 'Schibsted Grotesk';letter-spacing:-.04em">waitzi<span style="width:6px;height:6px;border-radius:50%;background:{{ sig }};display:inline-block"></span></div>
+        <div style="width:1px;height:20px;background:#E2DED6"></div>
+        <div style="font:500 15px 'Schibsted Grotesk';color:#6E6B65">Hallen · Stand 4</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <div style="font:500 15px 'Geist Mono',monospace;color:#6E6B65">{{ clock }}</div>
+        <button onClick="{{ newOrder }}" style="height:52px;padding:0 22px;border:none;border-radius:14px;background:#141413;color:#FBFAF8;font:600 16px 'Schibsted Grotesk';display:flex;align-items:center;gap:10px;transition:transform .12s" style-hover="background:#2B2A28" style-active="transform:scale(.97)"><span style="font-size:22px;line-height:1;margin-top:-2px">+</span>New order</button>
+      </div>
+    </div>
+
+    <div style="flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));min-height:0">
+      <div style="padding:22px 28px;border-right:1px solid #E2DED6;display:flex;flex-direction:column;flex:1.5">
+        <div style="display:flex;align-items:baseline;gap:10px;padding-bottom:10px;border-bottom:1px solid #141413">
+          <div style="font:600 13px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Preparing</div>
+          <div style="font:500 13px 'Geist Mono',monospace;color:#6E6B65">{{ prepCount }}</div>
+        </div>
+        <sc-for list="{{ prep }}" as="o" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:84px minmax(0,1fr) auto;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid #E2DED6;animation:wz-rise .35s cubic-bezier(.2,.8,.2,1) both">
+            <div style="font:800 50px/1 'Doto',monospace;letter-spacing:-.02em">{{ o.n }}</div>
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+              <div style="font:600 17px 'Schibsted Grotesk';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.title }}</div>
+              <div style="display:flex;flex-direction:column;gap:2px;font:500 13px 'Geist Mono',monospace;color:#6E6B65">
+                <span style="color:{{ o.timeColor }};white-space:nowrap">{{ o.time }}</span><span style="white-space:nowrap">{{ o.phoneLabel }}</span>
+              </div>
+            </div>
+            <button onClick="{{ o.onReady }}" style="height:64px;min-width:148px;padding:0 20px;border:none;border-radius:16px;background:#141413;color:#FBFAF8;font:600 17px 'Schibsted Grotesk';display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s,background .15s" style-hover="background:#2B2A28" style-active="transform:scale(.96)"><span style="width:8px;height:8px;border-radius:50%;background:{{ sig }}"></span>Mark ready</button>
+          </div>
+        </sc-for>
+        <sc-if value="{{ prepEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:60px 20px;text-align:center">
+            <div style="font:800 64px/1 'Doto',monospace;color:#D3CFC6">00</div>
+            <div style="font:600 18px 'Schibsted Grotesk'">Nothing cooking</div>
+            <div style="font:400 15px 'Schibsted Grotesk';color:#6E6B65">Tap New order when a ticket comes in.</div>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="padding:22px 28px;display:flex;flex-direction:column;background:#F6F4F0">
+        <div style="display:flex;align-items:baseline;gap:10px;padding-bottom:10px;border-bottom:1px solid #141413">
+          <div style="font:600 13px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Ready at counter</div>
+          <div style="font:500 13px 'Geist Mono',monospace;color:#6E6B65">{{ readyCount }}</div>
+        </div>
+        <sc-for list="{{ ready }}" as="o" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:16px 0;border-bottom:1px solid #E2DED6;animation:wz-rise .35s cubic-bezier(.2,.8,.2,1) both">
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:10px;height:10px;border-radius:50%;background:{{ sig }};box-shadow:0 0 0 4px {{ sigGlow }};animation:{{ m.led }};flex:none"></span>
+              <div style="font:800 40px/1 'Doto',monospace">{{ o.n }}</div>
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                <div style="font:600 16px 'Schibsted Grotesk'">{{ o.title }}</div>
+                <div style="font:500 12px 'Geist Mono',monospace;color:#6E6B65">{{ o.paged }} · {{ o.phoneLabel }}</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button onClick="{{ o.onPage }}" style="height:56px;border:1px solid #D3CFC6;border-radius:14px;background:transparent;color:#141413;font:600 15px 'Schibsted Grotesk';transition:transform .12s" style-hover="background:#EEEBE5" style-active="transform:scale(.96)">Page again</button>
+              <button onClick="{{ o.onCollect }}" style="height:56px;border:none;border-radius:14px;background:#E6E2DA;color:#141413;font:600 15px 'Schibsted Grotesk';transition:transform .12s" style-hover="background:#DDD8CE" style-active="transform:scale(.96)">Collected</button>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ readyEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:60px 20px;text-align:center">
+            <span style="width:10px;height:10px;border-radius:50%;background:#D3CFC6"></span>
+            <div style="font:600 17px 'Schibsted Grotesk'">Counter is clear</div>
+            <div style="font:400 14px 'Schibsted Grotesk';color:#6E6B65">Orders you mark ready wait here until collected.</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 28px;border-top:1px solid #E2DED6;font:400 12px 'Geist Mono',monospace;color:#6E6B65">
+      <span>{{ collectedToday }} collected today</span>
+      <span>On phone = paged automatically · Call out = shout the number</span>
+    </div>
+
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:50%;bottom:64px;transform:translateX(-50%);display:flex;align-items:center;gap:20px;padding:10px 10px 10px 20px;background:#141413;color:#FBFAF8;border-radius:16px;box-shadow:0 12px 32px rgba(20,20,19,.22);animation:wz-rise .3s cubic-bezier(.2,.8,.2,1) both;white-space:nowrap">
+        <span style="width:8px;height:8px;border-radius:50%;background:{{ sig }}"></span>
+        <span style="font:600 15px 'Schibsted Grotesk'">{{ toastText }}</span>
+        <sc-if value="{{ toastUndo }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ undo }}" style="height:44px;padding:0 16px;border:none;border-radius:10px;background:#2B2A28;color:{{ sig }};font:600 15px 'Schibsted Grotesk'" style-hover="background:#3A3936">Undo</button>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:20px;margin:0 auto">
+    <div style="width:399px;padding:12px;box-sizing:border-box;background:#141413;border-radius:58px;box-shadow:0 30px 60px -20px rgba(20,20,19,.35),inset 0 0 0 1.5px #3A3936;animation:{{ buzzAnim }}">
+      <div style="width:375px;height:780px;border-radius:46px;overflow:hidden;position:relative;background:#F4F2ED">
+        <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:112px;height:32px;border-radius:20px;background:#000;z-index:6"></div>
+        <div style="position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:5;font:600 15px 'Schibsted Grotesk';color:#141413">
+          <span>{{ clock }}</span><span style="font:500 11px 'Geist Mono',monospace">5G ▮▮▮</span>
+        </div>
+
+        <sc-if value="{{ isJoin }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;inset:52px 0 0;display:flex;flex-direction:column;padding:16px 24px 34px;animation:{{ m.fade }}">
+            <div style="display:flex;justify-content:space-between;align-items:center;font:500 13px 'Schibsted Grotesk';color:#6E6B65">
+              <span>Hallen · Stand 4</span>
+              <span style="display:flex;align-items:baseline;gap:1px;font:800 15px 'Schibsted Grotesk';color:#141413;letter-spacing:-.04em">waitzi<span style="width:4px;height:4px;border-radius:50%;background:{{ sig }}"></span></span>
+            </div>
+            <div style="margin-top:28px;font:700 30px/1.08 'Schibsted Grotesk';letter-spacing:-.03em">What's your<br>order number?</div>
+            <div style="margin-top:8px;font:400 15px 'Schibsted Grotesk';color:#6E6B65">It's on your receipt.</div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;font:800 112px/1 'Doto',monospace;color:{{ entryColor }};letter-spacing:-.02em">{{ entryDisplay }}</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+                <button onClick="{{ k.onClick }}" aria-label="{{ k.aria }}" style="height:58px;border:none;border-radius:16px;background:{{ k.bg }};color:#141413;font:500 26px 'Schibsted Grotesk';transition:transform .1s,background .1s" style-active="transform:scale(.93);background:#DDD8CE">{{ k.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ submit }}" style="margin-top:14px;height:60px;border:none;border-radius:18px;background:{{ startBg }};color:{{ startColor }};font:600 17px 'Schibsted Grotesk';transition:transform .12s,background .2s" style-active="transform:scale(.97)">Start waiting</button>
+            <div style="margin-top:12px;text-align:center;font:400 12px 'Geist Mono',monospace;color:#6E6B65">No app. No sign-up.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isWaiting }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:52px 0 0;display:flex;flex-direction:column;padding:16px 24px 34px;animation:{{ m.fade }}">
+            <div style="display:flex;justify-content:space-between;align-items:center;font:500 13px 'Schibsted Grotesk';color:#6E6B65">
+              <span>Hallen · Stand 4</span>
+              <span style="display:flex;align-items:baseline;gap:1px;font:800 15px 'Schibsted Grotesk';color:#141413;letter-spacing:-.04em">waitzi<span style="width:4px;height:4px;border-radius:50%;background:{{ sig }}"></span></span>
+            </div>
+            <sc-if value="{{ offline }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#E6E2DA;font:500 14px 'Schibsted Grotesk'">
+                <span style="width:8px;height:8px;border-radius:50%;background:#141413;animation:{{ m.led }}"></span>Reconnecting… your place is saved.
+              </div>
+            </sc-if>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:0">
+              <div style="position:relative;height:120px">
+                <span style="position:absolute;left:50%;top:50%;width:220px;height:220px;border-radius:50%;border:1.5px solid {{ dotColor }};opacity:0;animation:{{ m.ring }}"></span>
+                <span style="position:absolute;left:50%;top:50%;width:220px;height:220px;border-radius:50%;border:1.5px solid {{ dotColor }};opacity:0;animation:{{ m.ring2 }}"></span>
+                <span style="position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:{{ dotColor }};transition:background .6s"></span>
+              </div>
+              <div style="text-align:center;font:500 12px 'Geist Mono',monospace;letter-spacing:.16em;color:#6E6B65">ORDER</div>
+              <div style="text-align:center;font:800 150px/1 'Doto',monospace;letter-spacing:-.03em;margin-top:4px">{{ num }}</div>
+              <div style="text-align:center;margin-top:22px;font:700 26px/1.15 'Schibsted Grotesk';letter-spacing:-.025em">{{ headline }}</div>
+              <div style="text-align:center;margin-top:8px;font:400 16px/1.4 'Schibsted Grotesk';color:#6E6B65">{{ sub }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font:500 13px 'Schibsted Grotesk';color:#6E6B65">Estimated wait</span>
+                <span style="font:700 24px 'Schibsted Grotesk';letter-spacing:-.02em;font-variant-numeric:tabular-nums">{{ etaLabel }}</span>
+              </div>
+              <div style="height:3px;border-radius:2px;background:#E2DED6;overflow:hidden"><div style="height:100%;width:{{ progress }};background:#141413;transition:width 1s linear"></div></div>
+              <button onClick="{{ toggleSound }}" style="margin-top:10px;height:48px;border:1px solid #D3CFC6;border-radius:14px;background:transparent;color:#141413;font:500 14px 'Schibsted Grotesk';display:flex;align-items:center;justify-content:center;gap:8px" style-active="transform:scale(.97)"><span style="width:7px;height:7px;border-radius:50%;background:{{ soundDot }}"></span>{{ soundLabel }}</button>
+              <div style="text-align:center;font:400 12px 'Geist Mono',monospace;color:#6E6B65">Keep this page open. Put your phone down.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isReady }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;background:{{ sig }}">
+            <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 44%,rgba(255,255,255,.6),rgba(255,255,255,0) 62%);animation:{{ m.breathe }}"></div>
+            <div style="position:absolute;inset:52px 0 0;display:flex;flex-direction:column;padding:16px 24px 34px">
+              <div style="display:flex;justify-content:space-between;align-items:center;font:600 13px 'Schibsted Grotesk'">
+                <span>Hallen · Stand 4</span>
+                <span style="display:flex;align-items:baseline;gap:1px;font:800 15px 'Schibsted Grotesk';letter-spacing:-.04em">waitzi<span style="width:4px;height:4px;border-radius:50%;background:#141413"></span></span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+                <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.16em;animation:{{ m.rise1 }}">ORDER</div>
+                <div style="font:900 196px/1 'Doto',monospace;letter-spacing:-.03em;animation:{{ m.pop }}">{{ num }}</div>
+                <div style="margin-top:18px;font:800 40px/1 'Schibsted Grotesk';letter-spacing:-.04em;animation:{{ m.rise2 }}">Your order<br>is ready</div>
+                <div style="margin-top:14px;font:500 17px 'Schibsted Grotesk';animation:{{ m.rise3 }}">Come pick it up at the counter.</div>
+              </div>
+              <button onClick="{{ pickedUp }}" style="height:64px;border:none;border-radius:20px;background:#141413;color:#F4F2ED;font:600 18px 'Schibsted Grotesk';display:flex;align-items:center;justify-content:center;gap:10px;animation:{{ m.rise4 }};transition:transform .12s" style-active="transform:scale(.97)">I've got it <span style="font-size:20px">→</span></button>
+            </div>
+            <div style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;animation:{{ m.ignite }}"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:52px 0 0;display:flex;flex-direction:column;padding:16px 24px 34px;animation:{{ m.fade }}">
+            <div style="display:flex;justify-content:space-between;align-items:center;font:500 13px 'Schibsted Grotesk';color:#6E6B65">
+              <span>Hallen · Stand 4</span>
+              <span style="display:flex;align-items:baseline;gap:1px;font:800 15px 'Schibsted Grotesk';color:#141413;letter-spacing:-.04em">waitzi<span style="width:4px;height:4px;border-radius:50%;background:{{ sig }}"></span></span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">
+              <div style="font:800 52px/1 'Schibsted Grotesk';letter-spacing:-.045em">Enjoy<br>your meal.</div>
+              <div style="font:500 13px 'Geist Mono',monospace;color:#6E6B65">Order {{ num }} · collected {{ collectedAt }}</div>
+            </div>
+            <button onClick="{{ backToJoin }}" style="height:56px;border:1px solid #D3CFC6;border-radius:18px;background:transparent;color:#141413;font:600 16px 'Schibsted Grotesk'" style-active="transform:scale(.97)">Wait for another order</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isNotFound }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:52px 0 0;display:flex;flex-direction:column;padding:16px 24px 34px;animation:{{ m.fade }}">
+            <div style="font:500 13px 'Schibsted Grotesk';color:#6E6B65">Hallen · Stand 4</div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">
+              <div style="font:800 110px/1 'Doto',monospace;color:#D3CFC6">{{ missing }}</div>
+              <div style="font:700 28px/1.1 'Schibsted Grotesk';letter-spacing:-.03em">We can't find<br>that order.</div>
+              <div style="font:400 16px/1.4 'Schibsted Grotesk';color:#6E6B65;text-wrap:pretty">Check the number on your receipt, or ask at the counter.</div>
+            </div>
+            <button onClick="{{ retry }}" style="height:60px;border:none;border-radius:18px;background:#141413;color:#F4F2ED;font:600 17px 'Schibsted Grotesk'" style-active="transform:scale(.97)">Try again</button>
+          </div>
+        </sc-if>
+
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#141413;z-index:6"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:400px">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="7">
+        <button onClick="{{ c.onClick }}" style="height:34px;padding:0 12px;border-radius:17px;border:1px solid #D3CFC6;background:{{ c.bg }};color:{{ c.fg }};font:500 12px 'Geist Mono',monospace;display:flex;align-items:center;gap:6px">{{ c.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<div data-screen-label="System" style="background:#F4F2ED;border-top:1px solid #E2DED6">
+  <div style="max-width:1480px;margin:0 auto;padding:64px 40px 96px;display:flex;flex-direction:column;gap:56px">
+    <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-end">
+      <div style="font:800 56px/1 'Schibsted Grotesk';letter-spacing:-.045em">System</div>
+      <div style="font:400 16px/1.5 'Schibsted Grotesk';color:#6E6B65;max-width:520px;text-wrap:pretty">Neutral by default. The signal color appears only when food is ready, the way the light on a pager only came on when it mattered.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));gap:56px 64px">
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #141413">Alert signature · Wait → Beep → Vibrate → Light → Ready</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:grid;grid-template-columns:72px 1fr;align-items:center;gap:12px">
+            <span style="font:500 12px 'Geist Mono',monospace;color:#6E6B65">Light</span>
+            <div style="position:relative;height:28px;background:#EAE7E0;border-radius:6px;overflow:hidden">
+              <span style="position:absolute;left:0;width:12.3%;top:0;bottom:0;background:#fff;box-shadow:inset 0 0 0 1px #D3CFC6"></span>
+              <span style="position:absolute;left:18.5%;width:11.5%;top:0;bottom:0;background:#fff;box-shadow:inset 0 0 0 1px #D3CFC6"></span>
+              <span style="position:absolute;left:30%;right:0;top:0;bottom:0;background:{{ sig }};opacity:.75"></span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:72px 1fr;align-items:center;gap:12px">
+            <span style="font:500 12px 'Geist Mono',monospace;color:#6E6B65">Sound</span>
+            <div style="position:relative;height:28px;background:#EAE7E0;border-radius:6px;overflow:hidden">
+              <span style="position:absolute;left:0;width:10.8%;top:6px;bottom:6px;background:#141413;border-radius:3px"></span>
+              <span style="position:absolute;left:18.5%;width:10.8%;top:6px;bottom:6px;background:#141413;border-radius:3px"></span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:72px 1fr;align-items:center;gap:12px">
+            <span style="font:500 12px 'Geist Mono',monospace;color:#6E6B65">Haptic</span>
+            <div style="position:relative;height:28px;background:#EAE7E0;border-radius:6px;overflow:hidden">
+              <span style="position:absolute;left:0;width:5.4%;top:8px;bottom:8px;background:#6E6B65;border-radius:3px"></span>
+              <span style="position:absolute;left:12.3%;width:5.4%;top:8px;bottom:8px;background:#6E6B65;border-radius:3px"></span>
+              <span style="position:absolute;left:24.6%;width:20%;top:8px;bottom:8px;background:#6E6B65;border-radius:3px"></span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:72px 1fr;gap:12px">
+            <span></span>
+            <div style="display:flex;justify-content:space-between;font:400 11px 'Geist Mono',monospace;color:#6E6B65"><span>0</span><span>250</span><span>500</span><span>750</span><span>1000</span><span>1300 ms</span></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;font:400 14px/1.45 'Schibsted Grotesk';color:#3A3936">
+          <div><b style="font-weight:600;color:#141413">Beep · pause · beep.</b> Two 140 ms tones at C7, softened through a low-pass filter. Recognisable, never shrill.</div>
+          <div><b style="font-weight:600;color:#141413">Short · short · long.</b> 70 / 70 / 260 ms. The long buzz lands as the number scales in.</div>
+          <div><b style="font-weight:600;color:#141413">Flash, then glow.</b> A white ignite on each beep, then a slow ambient breathe until acknowledged.</div>
+        </div>
+        <button onClick="{{ playSignature }}" style="align-self:flex-start;height:52px;padding:0 22px;border:none;border-radius:14px;background:#141413;color:#F4F2ED;font:600 15px 'Schibsted Grotesk';display:flex;align-items:center;gap:10px" style-active="transform:scale(.97)"><span style="width:8px;height:8px;border-radius:50%;background:{{ sig }}"></span>Play signature</button>
+        <div style="font:400 12px/1.5 'Geist Mono',monospace;color:#6E6B65;text-wrap:pretty">Android Chrome vibrates via the Vibration API. iOS Safari has no web vibration, so light and sound carry the alert; customers who add Waitzi to the home screen also get a system push that vibrates.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #141413">Color</div>
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px">
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:1;border-radius:12px;background:#F4F2ED;box-shadow:inset 0 0 0 1px #D3CFC6"></div><div style="font:600 13px 'Schibsted Grotesk'">Paper</div><div style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">#F4F2ED</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:1;border-radius:12px;background:#141413"></div><div style="font:600 13px 'Schibsted Grotesk'">Ink</div><div style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">#141413</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:1;border-radius:12px;background:#6E6B65"></div><div style="font:600 13px 'Schibsted Grotesk'">Stone</div><div style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">#6E6B65</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:1;border-radius:12px;background:#E2DED6"></div><div style="font:600 13px 'Schibsted Grotesk'">Line</div><div style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">#E2DED6</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:1;border-radius:12px;background:{{ sig }};box-shadow:0 0 24px {{ sigGlow }}"></div><div style="font:600 13px 'Schibsted Grotesk'">Signal</div><div style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">{{ sigName }}</div></div>
+        </div>
+        <div style="font:400 14px/1.5 'Schibsted Grotesk';color:#3A3936;text-wrap:pretty">Signal is reserved for the ready moment, the Mark ready dot, and the ready LED on the dashboard. Text on Signal is always Ink.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #141413">Typography</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:18px 28px;align-items:center">
+          <div style="font:900 110px/1 'Doto',monospace;letter-spacing:-.03em">42</div>
+          <div style="display:flex;flex-direction:column;gap:4px"><div style="font:600 15px 'Schibsted Grotesk'">Doto · order numerals</div><div style="font:400 14px/1.45 'Schibsted Grotesk';color:#6E6B65;text-wrap:pretty">The dot-matrix pager display, used only for order numbers. That's the nostalgia.</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding-top:6px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid #E2DED6;padding-bottom:10px"><span style="font:800 40px/1 'Schibsted Grotesk';letter-spacing:-.04em">Your order is ready</span><span style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">Display 800 / 40</span></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid #E2DED6;padding-bottom:10px"><span style="font:700 26px/1.15 'Schibsted Grotesk';letter-spacing:-.025em">We're preparing your order.</span><span style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">Title 700 / 26</span></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid #E2DED6;padding-bottom:10px"><span style="font:400 16px 'Schibsted Grotesk'">We'll buzz you when it's ready.</span><span style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">Body 400 / 16</span></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:500 12px 'Geist Mono',monospace;letter-spacing:.14em">ORDER · 8 MIN · CALL OUT</span><span style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">Geist Mono · labels</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #141413">Components</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <button style="height:64px;padding:0 24px;border:none;border-radius:16px;background:#141413;color:#FBFAF8;font:600 17px 'Schibsted Grotesk';display:flex;align-items:center;gap:10px" style-active="transform:scale(.96)"><span style="width:8px;height:8px;border-radius:50%;background:{{ sig }}"></span>Mark ready</button>
+          <button style="height:64px;padding:0 24px;border:none;border-radius:16px;background:{{ sig }};color:#141413;font:600 17px 'Schibsted Grotesk'" style-active="transform:scale(.96)">I've got it →</button>
+          <button style="height:56px;padding:0 20px;border:1px solid #D3CFC6;border-radius:14px;background:transparent;color:#141413;font:600 15px 'Schibsted Grotesk'" style-active="transform:scale(.96)">Page again</button>
+          <button style="width:64px;height:58px;border:none;border-radius:16px;background:#E6E2DA;color:#141413;font:500 26px 'Schibsted Grotesk'" style-active="transform:scale(.93)">7</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:18px;font:500 12px 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase">
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#141413"></span>Preparing</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:{{ sig }};opacity:.55"></span>Almost</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:{{ sig }};box-shadow:0 0 0 4px {{ sigGlow }};animation:{{ m.led }}"></span>Ready</span>
+          <span style="display:flex;align-items:center;gap:8px;color:#6E6B65"><span style="width:8px;height:8px;border-radius:50%;background:#D3CFC6"></span>Collected</span>
+        </div>
+        <div style="font:400 14px/1.5 'Schibsted Grotesk';color:#3A3936;text-wrap:pretty">Staff targets are 56–64 px so they work with gloves. Customer keys are 58 px. Every press scales to 0.96 in 120 ms, so the tap registers before the network does.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #141413">QR onboarding · counter card</div>
+        <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:center">
+          <div style="width:220px;padding:22px;box-sizing:border-box;background:#FBFAF8;border-radius:18px;box-shadow:0 1px 0 #E2DED6,0 18px 40px -18px rgba(20,20,19,.25);display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:baseline;gap:1px;font:800 18px 'Schibsted Grotesk';letter-spacing:-.04em">waitzi<span style="width:5px;height:5px;border-radius:50%;background:{{ sig }}"></span></div>
+            <div style="aspect-ratio:1;border-radius:10px;background:repeating-linear-gradient(135deg,#EAE7E0 0 8px,#F4F2ED 8px 16px);display:flex;align-items:center;justify-content:center;font:400 11px 'Geist Mono',monospace;color:#6E6B65">QR code</div>
+            <div style="font:700 19px/1.1 'Schibsted Grotesk';letter-spacing:-.02em">Scan to join the queue</div>
+            <div style="font:400 11px 'Geist Mono',monospace;color:#6E6B65">or open waitzi.to/hallen4</div>
+          </div>
+          <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px;font:400 14px/1.5 'Schibsted Grotesk';color:#3A3936">
+            <div><b style="font-weight:600;color:#141413">01 Scan.</b> Opens in the browser, no install.</div>
+            <div><b style="font-weight:600;color:#141413">02 Type the number.</b> One field, one button. The tap also unlocks sound.</div>
+            <div><b style="font-weight:600;color:#141413">03 Wait.</b> The screen goes quiet.</div>
+            <div><b style="font-weight:600;color:#141413">04 Ready.</b> The phone becomes the pager.</div>
+            <div><b style="font-weight:600;color:#141413">05 Collected.</b> Enjoy your meal.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:600 12px 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #141413">Motion & access</div>
+        <div style="display:flex;flex-direction:column;font:400 14px/1.45 'Schibsted Grotesk';color:#3A3936">
+          <div style="display:grid;grid-template-columns:130px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid #E2DED6"><span style="font:500 12px 'Geist Mono',monospace;color:#141413">press · 120ms</span><span>Scale 0.96. Feedback before anything else.</span></div>
+          <div style="display:grid;grid-template-columns:130px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid #E2DED6"><span style="font:500 12px 'Geist Mono',monospace;color:#141413">state · 350ms</span><span>Fade and 16 px rise on ease-out. Screens change, nothing slides across.</span></div>
+          <div style="display:grid;grid-template-columns:130px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid #E2DED6"><span style="font:500 12px 'Geist Mono',monospace;color:#141413">signal · 3.6s</span><span>Standby ring while waiting, slow enough to ignore. Turns Signal when almost ready.</span></div>
+          <div style="display:grid;grid-template-columns:130px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid #E2DED6"><span style="font:500 12px 'Geist Mono',monospace;color:#141413">alert · 1.3s</span><span>Ignite, blink, spring the number to 1.045. The only loud moment.</span></div>
+          <div style="display:grid;grid-template-columns:130px 1fr;gap:16px;padding:10px 0"><span style="font:500 12px 'Geist Mono',monospace;color:#141413">reduced motion</span><span>No flash, rings or springs. The full-screen color change still carries the alert, so it never depends on sound or vibration.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;signal&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;amber&quot;,&quot;green&quot;,&quot;coral&quot;],&quot;default&quot;:&quot;amber&quot;,&quot;tsType&quot;:&quot;'amber'|'green'|'coral'&quot;},&quot;reducedMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;sound&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = this.init();
+  init() {
+    const now = Date.now(), m = 60000;
+    return {
+      now, view: 'join', entry: '', joined: null, offline: false, soundOn: true,
+      toast: null, buzz: false, pulse: 0, collectedToday: 37, collectedAt: '',
+      orders: [
+        { n: 38, name: 'Amalie', status: 'ready', start: now - 14 * m, eta: 600, readyAt: now - 3 * m, phone: true },
+        { n: 39, name: 'Noah', status: 'ready', start: now - 12 * m, eta: 600, readyAt: now - 1 * m, phone: false },
+        { n: 40, name: 'Freja', status: 'prep', start: now - 680e3, eta: 600, phone: true },
+        { n: 41, name: '', status: 'prep', start: now - 545e3, eta: 720, phone: false },
+        { n: 42, name: 'Jonas', status: 'prep', start: now - 450e3, eta: 600, phone: false },
+        { n: 43, name: 'Emil', status: 'prep', start: now - 250e3, eta: 600, phone: true },
+        { n: 44, name: '', status: 'prep', start: now - 60e3, eta: 480, phone: true },
+      ],
+    };
+  }
+  componentDidMount() { this.iv = setInterval(() => this.setState({ now: Date.now() }), 1000); }
+  componentWillUnmount() { clearInterval(this.iv); clearTimeout(this.tt); clearTimeout(this.bt); }
+
+  ensureAudio() {
+    try {
+      if (!this.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ctx = new AC(); }
+      if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    } catch (e) {}
+  }
+  beep() {
+    const c = this.ctx; if (!c) return;
+    const t = c.currentTime + 0.02;
+    [0, 0.24].forEach(d => {
+      const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+      o.type = 'square'; o.frequency.value = 2093;
+      lp.type = 'lowpass'; lp.frequency.value = 3200;
+      g.gain.setValueAtTime(0, t + d);
+      g.gain.linearRampToValueAtTime(0.07, t + d + 0.006);
+      g.gain.setValueAtTime(0.07, t + d + 0.1);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.14);
+      o.connect(lp); lp.connect(g); g.connect(c.destination);
+      o.start(t + d); o.stop(t + d + 0.16);
+    });
+  }
+  alert() {
+    this.ensureAudio();
+    if ((this.props.sound ?? true) && this.state.soundOn) this.beep();
+    try { navigator.vibrate && navigator.vibrate([70, 90, 70, 90, 260]); } catch (e) {}
+    this.setState({ buzz: false, pulse: 0 });
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ buzz: true, pulse: 1 })));
+    clearTimeout(this.bt); this.bt = setTimeout(() => this.setState({ buzz: false }), 1000);
+  }
+  toast(text, n, undo) {
+    this.setState({ toast: { text, n, undo, id: Date.now() } });
+    clearTimeout(this.tt); this.tt = setTimeout(() => this.setState({ toast: null }), 5000);
+  }
+  patch(n, p) { this.setState(s => ({ orders: s.orders.map(o => o.n === n ? { ...o, ...p } : o) })); }
+  find(n) { return this.state.orders.find(o => o.n === n); }
+  hhmm(t) { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+
+  markReady = (n) => {
+    this.ensureAudio();
+    this.patch(n, { status: 'ready', readyAt: Date.now() });
+    this.toast('#' + n + ' paged', n, true);
+    if (this.state.joined === n && this.state.view === 'waiting') { this.setState({ view: 'ready' }); this.alert(); }
+  };
+  undo = () => {
+    const t = this.state.toast; if (!t) return;
+    this.patch(t.n, { status: 'prep', readyAt: null });
+    if (this.state.joined === t.n && this.state.view === 'ready') this.setState({ view: 'waiting' });
+    clearTimeout(this.tt); this.setState({ toast: null });
+  };
+  collect = (n, fromPhone) => {
+    this.patch(n, { status: 'done' });
+    this.setState(s => ({ collectedToday: s.collectedToday + 1 }));
+    this.toast('#' + n + (fromPhone ? ' picked up' : ' collected'), n, false);
+    if (this.state.joined === n && this.state.view === 'ready') this.setState({ view: 'done', collectedAt: this.hhmm(Date.now()) });
+  };
+  pageAgain = (n) => {
+    this.ensureAudio();
+    this.patch(n, { readyAt: Date.now() });
+    this.toast('#' + n + ' paged again', n, false);
+    if (this.state.joined === n && this.state.view === 'ready') this.alert();
+  };
+  newOrder = () => {
+    const names = ['Mia', '', 'Oliver', 'Ida', '', 'Lucas', 'Clara', 'William'];
+    this.setState(s => {
+      const n = Math.max(...s.orders.map(o => o.n)) + 1;
+      return { orders: [...s.orders, { n, name: names[n % names.length], status: 'prep', start: Date.now(), eta: (6 + (n % 6)) * 60, phone: n % 3 !== 0 }] };
+    });
+  };
+  press = (d) => this.setState(s => (s.entry.length >= 3 || (s.entry === '' && d === '0')) ? null : { entry: s.entry + d });
+  del = () => this.setState(s => ({ entry: s.entry.slice(0, -1) }));
+  submit = () => {
+    if (!this.state.entry) return;
+    this.ensureAudio();
+    const n = parseInt(this.state.entry, 10);
+    const o = this.state.orders.find(x => x.n === n && x.status !== 'done');
+    if (!o) { this.setState({ view: 'notfound', missing: this.state.entry }); return; }
+    this.patch(n, { phone: true });
+    this.setState({ joined: n, view: o.status === 'ready' ? 'ready' : 'waiting' });
+    if (o.status === 'ready') this.alert();
+  };
+  jump(k) {
+    this.ensureAudio();
+    const j = this.state.joined ?? 42;
+    const now = Date.now();
+    const o = this.find(j) || { eta: 600 };
+    const base = { joined: j, offline: false };
+    if (k === 'join') return this.setState({ view: 'join', entry: '', offline: false });
+    if (k === 'notfound') return this.setState({ view: 'notfound', missing: '99', offline: false });
+    if (k === 'offline') return this.setState(s => ({ offline: !s.offline, view: 'waiting', joined: j }));
+    if (k === 'waiting' || k === 'almost') {
+      this.patch(j, { status: 'prep', phone: true, readyAt: null, start: now - (o.eta - (k === 'almost' ? 50 : 300)) * 1000 });
+      return this.setState({ ...base, view: 'waiting' });
+    }
+    if (k === 'ready') {
+      this.patch(j, { status: 'ready', phone: true, readyAt: now });
+      this.setState({ ...base, view: 'ready' }); return this.alert();
+    }
+    if (k === 'done') { this.patch(j, { status: 'done' }); return this.setState({ ...base, view: 'done', collectedAt: this.hhmm(now) }); }
+  }
+
+  renderVals() {
+    const s = this.state, now = s.now;
+    const sigKey = this.props.signal ?? 'amber';
+    const SIG = {
+      amber: ['oklch(0.82 0.16 72)', 'oklch(0.82 0.16 72 / 0.28)', 'oklch 0.82 0.16 72', 'oklch(0.52 0.13 60)'],
+      green: ['oklch(0.86 0.19 142)', 'oklch(0.86 0.19 142 / 0.28)', 'oklch 0.86 0.19 142', 'oklch(0.50 0.13 145)'],
+      coral: ['oklch(0.72 0.18 38)', 'oklch(0.72 0.18 38 / 0.28)', 'oklch 0.72 0.18 38', 'oklch(0.52 0.16 36)'],
+    }[sigKey] || [];
+    const [sig, sigGlow, sigName, sigDeep] = SIG;
+    const rm = this.props.reducedMotion ?? false;
+    const ease = 'cubic-bezier(.2,.8,.2,1)';
+    const m = rm ? { ring: 'none', ring2: 'none', ignite: 'none', breathe: 'none', pop: 'none', rise1: 'none', rise2: 'none', rise3: 'none', rise4: 'none', led: 'none', fade: 'none' } : {
+      ring: 'wz-ring 3.6s cubic-bezier(.2,.6,.3,1) infinite',
+      ring2: 'wz-ring 3.6s cubic-bezier(.2,.6,.3,1) 1.8s infinite',
+      ignite: s.pulse ? 'wz-ignite 1.3s linear both' : 'none',
+      breathe: 'wz-breathe 3s ease-in-out 1.3s infinite',
+      pop: 'wz-pop .9s cubic-bezier(.3,1.4,.4,1) .3s both',
+      rise1: 'wz-rise .5s ' + ease + ' .2s both',
+      rise2: 'wz-rise .6s ' + ease + ' .55s both',
+      rise3: 'wz-rise .6s ' + ease + ' .7s both',
+      rise4: 'wz-rise .6s ' + ease + ' .9s both',
+      led: 'wz-led 1.2s steps(1) infinite',
+      fade: 'wz-fade .35s ease-out both',
+    };
+    const el = o => (now - o.start) / 1000;
+    const prep = s.orders.filter(o => o.status === 'prep').sort((a, b) => a.start - b.start).map(o => {
+      const e = el(o), late = e > o.eta;
+      return {
+        n: o.n, title: o.name || 'Walk-in',
+        time: Math.floor(e / 60) + ' min' + (late ? ' · over' : ' of ' + Math.round(o.eta / 60)),
+        timeColor: late ? sigDeep : '#6E6B65',
+        phoneLabel: o.phone ? 'On phone' : 'Call out',
+        onReady: () => this.markReady(o.n),
+      };
+    });
+    const ready = s.orders.filter(o => o.status === 'ready').sort((a, b) => a.readyAt - b.readyAt).map(o => {
+      const mins = Math.floor((now - o.readyAt) / 60000);
+      return {
+        n: o.n, title: o.name || 'Walk-in',
+        paged: mins < 1 ? 'Paged just now' : 'Paged ' + mins + ' min ago',
+        phoneLabel: o.phone ? 'On phone' : 'Call out',
+        onPage: () => this.pageAgain(o.n),
+        onCollect: () => this.collect(o.n),
+      };
+    });
+
+    const jo = s.joined != null ? this.find(s.joined) : null;
+    let rem = 0, pct = 0;
+    if (jo) { const e = el(jo); rem = Math.max(0, jo.eta - e); pct = Math.min(100, e / jo.eta * 100); }
+    const almost = s.view === 'waiting' && rem <= 60;
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map(k => ({
+      label: k, aria: k === '⌫' ? 'Delete' : k,
+      bg: k === '' ? 'transparent' : k === '⌫' ? 'transparent' : '#E6E2DA',
+      onClick: k === '' ? () => {} : k === '⌫' ? this.del : () => this.press(k),
+    }));
+    const cur = s.view === 'waiting' ? (almost ? 'almost' : 'waiting') : s.view;
+    const chips = [['join', '01 Join'], ['waiting', '02 Waiting'], ['almost', '03 Almost'], ['ready', '04 Ready'], ['done', '05 Collected'], ['notfound', 'Not found'], ['offline', 'Offline']].map(([k, label]) => {
+      const on = k === 'offline' ? s.offline : k === cur;
+      return { label, bg: on ? '#141413' : 'transparent', fg: on ? '#F4F2ED' : '#141413', onClick: () => this.jump(k) };
+    });
+
+    return {
+      sig, sigGlow, sigName, m,
+      clock: this.hhmm(now),
+      prep, ready, prepCount: String(prep.length), readyCount: String(ready.length),
+      prepEmpty: prep.length === 0, readyEmpty: ready.length === 0,
+      collectedToday: s.collectedToday, newOrder: this.newOrder,
+      hasToast: !!s.toast, toastText: s.toast ? s.toast.text : '', toastUndo: !!(s.toast && s.toast.undo), undo: this.undo,
+      buzzAnim: s.buzz && !rm ? 'wz-buzz .8s linear' : 'none',
+      isJoin: s.view === 'join', isWaiting: s.view === 'waiting', isReady: s.view === 'ready', isDone: s.view === 'done', isNotFound: s.view === 'notfound',
+      entryDisplay: s.entry || '––', entryColor: s.entry ? '#141413' : '#D3CFC6',
+      keys, submit: this.submit,
+      startBg: s.entry ? '#141413' : '#E6E2DA', startColor: s.entry ? '#F4F2ED' : '#9B978F',
+      num: s.joined ?? 42,
+      headline: almost ? 'Almost there.' : "We're preparing your order.",
+      sub: almost ? 'About a minute to go.' : (jo && jo.name ? 'Thanks, ' + jo.name + '. ' : '') + "We'll buzz you when it's ready.",
+      etaLabel: rem <= 60 ? '< 1 min' : '~' + Math.ceil(rem / 60) + ' min',
+      progress: pct.toFixed(1) + '%',
+      dotColor: almost ? sig : '#141413',
+      offline: s.offline,
+      soundLabel: s.soundOn ? 'Sound and vibration on' : 'Sound off · vibration and light only',
+      soundDot: s.soundOn ? sig : '#D3CFC6',
+      toggleSound: () => { this.ensureAudio(); this.setState(x => ({ soundOn: !x.soundOn })); },
+      pickedUp: () => this.collect(s.joined, true),
+      collectedAt: s.collectedAt,
+      backToJoin: () => this.setState({ view: 'join', entry: '', joined: null }),
+      missing: s.missing || '99',
+      retry: () => this.setState({ view: 'join', entry: '' }),
+      chips,
+      playSignature: () => this.alert(),
+    };
+  }
+}
+</script>
+</body>
+</html>

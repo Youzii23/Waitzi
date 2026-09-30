@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Waitzi · Counter card</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="/app.css">
+<style>
+body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 40px 16px; background: var(--paper); }
+.card { width: 100%; max-width: 360px; padding: 32px; background: var(--paper-2); border-radius: 24px; box-shadow: 0 1px 0 var(--line), 0 18px 40px -18px rgba(20,20,19,.25); display: flex; flex-direction: column; gap: 20px; }
+.card .logo { font-size: 26px; gap: 1px; }
+.card .logo .dot { width: 7px; height: 7px; }
+.qr { aspect-ratio: 1; border-radius: 12px; background: #fff; padding: 18px; }
+.qr img { width: 100%; height: 100%; display: block; }
+.h { font: 700 28px/1.1 var(--sans); letter-spacing: -.02em; }
+.u { font: 400 13px var(--mono); color: var(--stone); word-break: break-all; }
+.steps { max-width: 360px; display: flex; flex-direction: column; gap: 10px; font: 400 14px/1.5 var(--sans); color: var(--ink-3); }
+.steps b { font-weight: 600; color: var(--ink); }
+.print { height: 52px; padding: 0 22px; border-radius: 14px; background: var(--ink); color: var(--paper); font: 600 15px var(--sans); }
+@media print {
+  body { background: #fff; padding: 0; }
+  .card { box-shadow: none; border: 1px solid var(--line); }
+  .noprint { display: none !important; }
+}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">waitzi<span class="dot"></span></div>
+    <div class="qr"><img src="/qr.svg" alt="QR code that opens Waitzi"></div>
+    <div class="h">Scan to join the queue</div>
+    <div class="u">or open <span id="url"></span></div>
+  </div>
+  <div class="steps noprint">
+    <div><b>01 Scan.</b> Opens in the browser, no install.</div>
+    <div><b>02 Type the number.</b> One field, one button. The tap also unlocks sound.</div>
+    <div><b>03 Wait.</b> The screen goes quiet.</div>
+    <div><b>04 Ready.</b> The phone becomes the pager.</div>
+    <div><b>05 Collected.</b> Enjoy your meal.</div>
+  </div>
+  <button class="print press noprint" type="button" onclick="print()">Print card</button>
+<script src="/common.js"></script>
+<script>
+  Waitzi.config.then(c => { document.getElementById('url').textContent = (c.url || location.origin).replace(/^https?:\/\//, ''); });
+</script>
+</body>
+</html>
