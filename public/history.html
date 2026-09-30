@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBFAF8">
+<meta name="robots" content="noindex">
+<title>Waitzi · History</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;800;900&family=Geist+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/app.css">
+<style>
+html, body { min-height: 100%; background: var(--paper-2); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; padding-top: calc(18px + env(safe-area-inset-top)); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.bar .left { display: flex; align-items: center; gap: 16px; }
+.bar .logo { font-size: 22px; }
+.bar .logo .dot { width: 6px; height: 6px; }
+.vr { width: 1px; height: 20px; background: var(--line); }
+.venue { font: 500 15px var(--sans); color: var(--stone); }
+.back { height: 52px; padding: 0 20px; border: 1px solid var(--line-2); border-radius: 14px; display: flex; align-items: center; gap: 8px; font: 600 16px var(--sans); color: var(--ink); text-decoration: none; }
+.back:hover { background: var(--bg); color: var(--ink); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 28px 28px 64px; }
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+h1 { margin: 0; font: 800 44px/1 var(--sans); letter-spacing: -.045em; }
+.daynav { display: flex; align-items: center; gap: 8px; }
+.daynav button { width: 52px; height: 52px; border-radius: 14px; background: var(--key); font: 600 20px var(--sans); }
+.daynav button:hover:not(:disabled) { background: var(--key-2); }
+.daynav button:disabled { opacity: .35; }
+.daynav .d { min-width: 150px; text-align: center; font: 600 15px var(--mono); }
+
+.stats { margin-top: 28px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+.stat { padding: 18px 0 20px; display: flex; flex-direction: column; gap: 8px; }
+.stat + .stat { padding-left: 20px; border-left: 1px solid var(--line); }
+.stat .k { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--stone); }
+.stat .v { font: 800 44px/1 var(--dots); letter-spacing: -.02em; }
+.stat .v small { font: 600 15px var(--sans); letter-spacing: 0; margin-left: 4px; color: var(--stone); }
+
+.head { margin-top: 32px; display: flex; align-items: baseline; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
+.head .t { font: 600 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.head .c { font: 500 13px var(--mono); color: var(--stone); }
+
+.row { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto auto; align-items: center; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.row .num { font-size: 36px; color: var(--stone); }
+.row .info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.row .title { font: 600 16px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .times { font: 500 12px var(--mono); color: var(--stone); display: flex; flex-wrap: wrap; column-gap: 12px; }
+.row .wait { font: 700 18px var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; text-align: right; }
+.row .wait small { display: block; font: 500 11px var(--mono); letter-spacing: 0; color: var(--stone); }
+.row .wait.late { color: var(--sig-deep); }
+.tag { height: 28px; padding: 0 10px; border-radius: 14px; border: 1px solid var(--line-2); display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--mono); white-space: nowrap; }
+.tag .dot { width: 6px; height: 6px; }
+.tag.counter .dot { background: var(--line-2); }
+
+.empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 72px 20px; text-align: center; }
+.empty .num { font-size: 64px; color: var(--line-2); }
+.empty .h { font: 600 18px var(--sans); }
+.empty .p { font: 400 15px var(--sans); color: var(--stone); }
+
+@media (max-width: 760px) {
+  .bar, main { padding-left: 16px; padding-right: 16px; }
+  h1 { font-size: 36px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(3) { padding-left: 0; border-left: none; border-top: 1px solid var(--line); }
+  .stat:nth-child(4) { border-top: 1px solid var(--line); }
+  .row { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; }
+  .row .num { font-size: 28px; }
+  .row .tag { grid-column: 2 / 4; justify-self: start; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="left">
+    <div class="logo">waitzi<span class="dot"></span></div>
+    <div class="vr"></div>
+    <div class="venue" data-venue>&nbsp;</div>
+  </div>
+  <a class="back press" href="/staff">← Counter</a>
+</header>
+
+<main>
+  <div class="top">
+    <h1>History</h1>
+    <div class="daynav">
+      <button type="button" id="prev" class="press" aria-label="Previous day">‹</button>
+      <div class="d" id="dayLabel">Today</div>
+      <button type="button" id="next" class="press" aria-label="Next day">›</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Collected</div><div class="v" id="sCount">0</div></div>
+    <div class="stat"><div class="k">Avg. cook time</div><div class="v" id="sCook">–</div></div>
+    <div class="stat"><div class="k">Avg. pickup</div><div class="v" id="sPickup">–</div></div>
+    <div class="stat"><div class="k">Paged on phone</div><div class="v" id="sPhone">–</div></div>
+  </div>
+
+  <div class="head"><div class="t">Collected orders</div><div class="c" id="count">0</div></div>
+  <div id="list"></div>
+  <div class="empty" id="empty" hidden>
+    <div class="num">00</div>
+    <div class="h">No collected orders</div>
+    <div class="p">Orders show up here once they're collected.</div>
+  </div>
+</main>
+
+<script src="/common.js"></script>
+<script src="/history.js"></script>
+</body>
+</html>

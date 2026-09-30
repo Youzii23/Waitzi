@@ -10,10 +10,30 @@ const PORT = Number(process.env.PORT) || 3000;
 const VENUE = process.env.VENUE_NAME || 'Hallen · Stand 4';
 const STAFF_KEY = process.env.STAFF_KEY || '';
 const SIGNAL = ['amber', 'green', 'coral'].includes(process.env.SIGNAL) ? process.env.SIGNAL : 'amber';
-const PUBLIC_URL = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+// Render sets RENDER_EXTERNAL_URL to the service's https address.
+const PUBLIC_URL = (process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'state.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DEFAULT_ETA = 600;
+
+// ---------- web push (lock-screen alerts) ----------
+// Keys come from the environment, or are generated once and kept next to the data file.
+const webpush = require('web-push');
+const VAPID_FILE = path.join(path.dirname(DATA_FILE), 'vapid.json');
+let vapid = null;
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  vapid = { publicKey: process.env.VAPID_PUBLIC_KEY, privateKey: process.env.VAPID_PRIVATE_KEY };
+} else {
+  try { vapid = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')); } catch (e) {
+    vapid = webpush.generateVAPIDKeys();
+    fs.mkdirSync(path.dirname(VAPID_FILE), { recursive: true });
+    fs.writeFileSync(VAPID_FILE, JSON.stringify(vapid));
+  }
+}
+// Apple rejects push from a localhost subject, so prefer a real https address or a mailto.
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT
+  || (/^https:\/\//.test(PUBLIC_URL) ? PUBLIC_URL : 'mailto:waitzi@example.com');
+webpush.setVapidDetails(VAPID_SUBJECT, vapid.publicKey, vapid.privateKey);
 
 // ---------- state ----------
 function today() {
@@ -22,7 +42,21 @@ function today() {
 }
 
 function freshState() {
-  return { day: today(), seq: 0, collectedToday: 0, orders: [], undo: null };
+  return { day: today(), seq: 0, collectedToday: 0, orders: [], undo: null, history: [] };
+}
+
+// Collected orders, kept across days so the restaurant can look back.
+const HISTORY_MAX = 20000;
+
+function dayOf(t) {
+  const d = new Date(t);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function historyFor(day) {
+  const days = [...new Set(state.history.map(h => dayOf(h.collectedAt)))].sort().reverse();
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(day || '') ? day : today();
+  return { now: Date.now(), day: d, today: today(), days, orders: state.history.filter(h => dayOf(h.collectedAt) === d).reverse() };
 }
 
 let state = freshState();
@@ -68,11 +102,27 @@ function nextNumber() {
   return n;
 }
 
+// Orders still cooking that came in before this one: the customer's place in line.
+function aheadOf(o) {
+  if (o.status !== 'prep') return 0;
+  return state.orders.filter(x => x.status === 'prep' && x.start < o.start).length;
+}
+
 function publicOrder(o) {
   if (!o) return null;
   return {
-    n: o.n, name: o.name || '', status: o.status, start: o.start, eta: o.eta,
+    n: o.n, name: o.name || '', status: o.status, start: o.start, eta: o.eta, ahead: aheadOf(o),
     readyAt: o.readyAt || null, pages: o.pages || 0, collectedAt: o.collectedAt || null, phone: !!o.phone,
+  };
+}
+
+// The public TV board shows numbers only, never names.
+function boardSnapshot() {
+  const open = state.orders.filter(o => o.status !== 'done');
+  return {
+    now: Date.now(), venue: VENUE,
+    prep: open.filter(o => o.status === 'prep').sort((a, b) => a.start - b.start).map(o => o.n),
+    ready: open.filter(o => o.status === 'ready').sort((a, b) => b.readyAt - a.readyAt).map(o => ({ n: o.n, readyAt: o.readyAt })),
   };
 }
 
@@ -99,10 +149,15 @@ function openStream(req, res) {
   res.write('retry: 2000\n\n');
 }
 
-function broadcast(n) {
+const boardClients = new Set();
+
+function broadcast() {
   const snap = staffSnapshot();
   for (const res of staffClients) send(res, snap);
-  if (n != null) pushOrder(n);
+  const board = boardSnapshot();
+  for (const res of boardClients) send(res, board);
+  // Every waiting phone hears about every change, since its place in line may have moved.
+  for (const n of orderClients.keys()) pushOrder(n);
 }
 
 function pushOrder(n) {
@@ -114,8 +169,38 @@ function pushOrder(n) {
 
 setInterval(() => {
   for (const res of staffClients) res.write(': ping\n\n');
+  for (const res of boardClients) res.write(': ping\n\n');
   for (const set of orderClients.values()) for (const res of set) res.write(': ping\n\n');
 }, 20000).unref();
+
+// Page the customer's phone through the push service, for when the page is asleep or closed.
+const pusher = {
+  send: (sub, payload) => webpush.sendNotification(sub, payload, { TTL: 300, urgency: 'high', topic: 'ready' }),
+};
+
+function pushReady(n) {
+  const o = find(n);
+  if (!o || !o.subs || !o.subs.length) return;
+  const payload = JSON.stringify({
+    title: 'Order ' + o.n + ' is ready',
+    body: 'Come pick it up at the counter.',
+    n: o.n, pages: o.pages,
+  });
+  for (const sub of o.subs.slice()) {
+    Promise.resolve().then(() => pusher.send(sub, payload)).catch(err => {
+      // The browser dropped the subscription: forget it.
+      if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+        o.subs = o.subs.filter(s => s.endpoint !== sub.endpoint);
+        save();
+      } else console.warn('push failed for #' + o.n + ':', err && (err.statusCode || err.message));
+    });
+  }
+}
+
+function validSubscription(sub) {
+  return sub && typeof sub.endpoint === 'string' && /^https:\/\//.test(sub.endpoint) && sub.endpoint.length < 1000
+    && sub.keys && typeof sub.keys.p256dh === 'string' && typeof sub.keys.auth === 'string';
+}
 
 // ---------- actions ----------
 const actions = {
@@ -135,6 +220,16 @@ const actions = {
     state.undo = n;
     return true;
   },
+  // Take back a Collected tap: the order goes back on the counter and out of history.
+  uncollect(n) {
+    const o = state.orders.filter(x => x.n === n).pop();
+    if (!o || o.status !== 'done' || find(n)) return false;
+    const i = state.history.map(h => h.n === n && h.collectedAt === o.collectedAt).lastIndexOf(true);
+    if (i >= 0) state.history.splice(i, 1);
+    o.status = 'ready'; o.collectedAt = null;
+    state.collectedToday = Math.max(0, state.collectedToday - 1);
+    return true;
+  },
   undo(n) {
     const o = find(n);
     if (!o || o.status !== 'ready') return false;
@@ -147,11 +242,16 @@ const actions = {
     o.readyAt = Date.now(); o.pages = (o.pages || 0) + 1;
     return true;
   },
-  collect(n) {
+  collect(n, by) {
     const o = find(n);
     if (!o) return false;
-    o.status = 'done'; o.collectedAt = Date.now();
+    o.status = 'done'; o.collectedAt = Date.now(); o.subs = [];
     state.collectedToday += 1;
+    state.history.push({
+      n: o.n, name: o.name || '', start: o.start, eta: o.eta, readyAt: o.readyAt || null,
+      collectedAt: o.collectedAt, pages: o.pages || 0, phone: !!o.phone, by: by === 'phone' ? 'phone' : 'counter',
+    });
+    if (state.history.length > HISTORY_MAX) state.history.splice(0, state.history.length - HISTORY_MAX);
     return true;
   },
 };
@@ -200,7 +300,7 @@ function serveFile(res, file, cache) {
   });
 }
 
-const PAGES = { '/': 'customer.html', '/staff': 'staff.html', '/card': 'card.html' };
+const PAGES = { '/': 'customer.html', '/staff': 'staff.html', '/history': 'history.html', '/board': 'board.html', '/card': 'card.html' };
 
 // ---------- router ----------
 async function handle(req, res) {
@@ -209,12 +309,13 @@ async function handle(req, res) {
   const p = url.pathname;
   let m;
 
-  if (p === '/api/config') return json(res, 200, { venue: VENUE, signal: SIGNAL, staffAuth: !!STAFF_KEY, url: baseUrl(req) });
+  if (p === '/api/config') return json(res, 200, { venue: VENUE, signal: SIGNAL, staffAuth: !!STAFF_KEY, url: baseUrl(req), pushKey: vapid.publicKey });
 
   // Staff API
   if (p.startsWith('/api/staff/')) {
     if (!staffOk(req, url)) return json(res, 401, { error: 'staff key required' });
     if (p === '/api/staff/state' && req.method === 'GET') return json(res, 200, staffSnapshot());
+    if (p === '/api/staff/history' && req.method === 'GET') return json(res, 200, historyFor(url.searchParams.get('day')));
     if (p === '/api/staff/events' && req.method === 'GET') {
       openStream(req, res);
       staffClients.add(res);
@@ -227,10 +328,11 @@ async function handle(req, res) {
       save(); broadcast(n);
       return json(res, 200, { n });
     }
-    if ((m = p.match(/^\/api\/staff\/orders\/(\d+)\/(ready|undo|page|collect)$/)) && req.method === 'POST') {
+    if ((m = p.match(/^\/api\/staff\/orders\/(\d+)\/(ready|undo|page|collect|uncollect)$/)) && req.method === 'POST') {
       const n = Number(m[1]);
       if (!actions[m[2]](n)) return json(res, 409, { error: 'order not in a state for that' });
       save(); broadcast(n);
+      if (m[2] === 'ready' || m[2] === 'page') pushReady(n);
       return json(res, 200, { ok: true });
     }
     return json(res, 404, { error: 'not found' });
@@ -244,11 +346,21 @@ async function handle(req, res) {
     save(); broadcast(o.n);
     return json(res, 200, { now: Date.now(), order: publicOrder(o) });
   }
+  if ((m = p.match(/^\/api\/orders\/(\d{1,3})\/subscribe$/)) && req.method === 'POST') {
+    const o = find(Number(m[1]));
+    if (!o) return json(res, 404, { error: 'not found' });
+    const { subscription } = await readBody(req);
+    if (!validSubscription(subscription)) return json(res, 400, { error: 'bad subscription' });
+    const sub = { endpoint: subscription.endpoint, keys: { p256dh: subscription.keys.p256dh, auth: subscription.keys.auth } };
+    o.subs = (o.subs || []).filter(s => s.endpoint !== sub.endpoint).concat(sub).slice(-3);
+    save();
+    return json(res, 200, { ok: true });
+  }
   if ((m = p.match(/^\/api\/orders\/(\d{1,3})\/collect$/)) && req.method === 'POST') {
     const n = Number(m[1]);
     const o = find(n);
     if (!o || o.status !== 'ready') return json(res, 409, { error: 'not ready' });
-    actions.collect(n);
+    actions.collect(n, 'phone');
     save(); broadcast(n);
     return json(res, 200, { ok: true });
   }
@@ -262,6 +374,14 @@ async function handle(req, res) {
       const set = orderClients.get(n);
       if (set) { set.delete(res); if (!set.size) orderClients.delete(n); }
     });
+    return;
+  }
+
+  if (p === '/api/board/events' && req.method === 'GET') {
+    openStream(req, res);
+    boardClients.add(res);
+    send(res, boardSnapshot());
+    req.on('close', () => boardClients.delete(res));
     return;
   }
 
@@ -295,4 +415,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, actions, state: () => state };
+module.exports = { server, actions, pusher, state: () => state };

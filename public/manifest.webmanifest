@@ -2,7 +2,6 @@
   "name": "Waitzi",
   "short_name": "Waitzi",
   "description": "No pager. Your phone becomes the pager.",
-  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

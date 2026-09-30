@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Waitzi · Board</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;800;900&family=Geist+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/app.css">
+<style>
+html, body { height: 100%; overflow: hidden; background: var(--paper); }
+body { display: flex; flex-direction: column; cursor: default; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 2vw; padding: 2.2vh 3vw; border-bottom: 1px solid var(--line); }
+.bar .left { display: flex; align-items: center; gap: 1.4vw; }
+.bar .logo { font-size: clamp(22px, 2.4vw, 44px); }
+.bar .logo .dot { width: .3em; height: .3em; }
+.vr { width: 1px; height: 1.6em; background: var(--line); }
+.venue, .clock { font: 500 clamp(15px, 1.4vw, 26px) var(--sans); color: var(--stone); }
+.clock { font-family: var(--mono); }
+
+.cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 2fr 1fr; }
+.col { min-height: 0; display: flex; flex-direction: column; padding: 3vh 3vw; overflow: hidden; }
+.col.ready { background: var(--paper); }
+.col.prep { background: var(--paper-3); border-left: 1px solid var(--line); }
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 1vw; padding-bottom: 1.4vh; border-bottom: 2px solid var(--ink); }
+.head .t { font: 600 clamp(14px, 1.3vw, 24px) var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.head .s { font: 500 clamp(13px, 1.1vw, 20px) var(--sans); color: var(--stone); }
+
+.grid { flex: 1; min-height: 0; display: grid; align-content: start; gap: 2vh 2vw; padding-top: 3vh; }
+.ready .grid { grid-template-columns: repeat(auto-fill, minmax(var(--cell, 22vw), 1fr)); }
+.prep .grid { grid-template-columns: repeat(auto-fill, minmax(8vw, 1fr)); gap: 1.4vh 1.4vw; }
+
+.tile { position: relative; display: flex; align-items: center; justify-content: center; border-radius: 2vw; background: var(--sig); aspect-ratio: 16 / 10; }
+.tile .num { font-size: var(--num, 12vw); font-weight: 900; letter-spacing: -.03em; }
+.tile .led { position: absolute; top: 1.4vw; right: 1.4vw; width: 1vw; height: 1vw; min-width: 10px; min-height: 10px; background: var(--ink); }
+.tile.fresh { animation: wz-pop .9s cubic-bezier(.3,1.4,.4,1) both; }
+.tile.fresh::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #fff; opacity: 0; animation: wz-ignite 1.3s linear both; }
+.p { font-size: clamp(32px, 4.4vw, 88px); color: var(--stone); text-align: center; }
+
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4vh; text-align: center; }
+.empty .num { font-size: 9vw; color: var(--line-2); }
+.empty .h { font: 700 clamp(20px, 2.2vw, 40px) var(--sans); letter-spacing: -.02em; }
+.empty .sub { font: 400 clamp(15px, 1.3vw, 24px) var(--sans); color: var(--stone); }
+
+.foot { display: flex; align-items: center; gap: 1.6vw; padding: 1.6vh 3vw; border-top: 1px solid var(--line); background: var(--paper-2); }
+.foot img { height: clamp(56px, 8vh, 120px); aspect-ratio: 1; background: #fff; padding: 6px; border-radius: 10px; }
+.foot .h { font: 700 clamp(17px, 1.6vw, 30px) var(--sans); letter-spacing: -.02em; }
+.foot .u { font: 400 clamp(12px, 1vw, 18px) var(--mono); color: var(--stone); }
+.foot .spacer { flex: 1; }
+.conn { display: flex; align-items: center; gap: 8px; font: 500 clamp(12px, 1vw, 18px) var(--mono); color: var(--stone); }
+.conn .dot { width: 8px; height: 8px; background: var(--ink); }
+
+.start { position: fixed; left: 50%; bottom: 14vh; transform: translateX(-50%); height: 56px; padding: 0 24px; border-radius: 16px; background: var(--ink); color: var(--paper); font: 600 16px var(--sans); display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 32px rgba(20,20,19,.25); z-index: 5; }
+.start .dot { width: 8px; height: 8px; }
+
+@media (max-aspect-ratio: 1/1) {
+  .cols { grid-template-columns: 1fr; grid-template-rows: 2fr 1fr; }
+  .col.prep { border-left: none; border-top: 1px solid var(--line); }
+  .ready .grid { grid-template-columns: repeat(auto-fill, minmax(var(--cell, 40vw), 1fr)); }
+  .prep .grid { grid-template-columns: repeat(auto-fill, minmax(18vw, 1fr)); }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="left">
+    <div class="logo">waitzi<span class="dot"></span></div>
+    <div class="vr"></div>
+    <div class="venue" data-venue>&nbsp;</div>
+  </div>
+  <div class="clock" id="clock">--:--</div>
+</header>
+
+<div class="cols">
+  <section class="col ready">
+    <div class="head"><div class="t">Ready · come to the counter</div><div class="s" id="readyCount"></div></div>
+    <div class="grid" id="ready"></div>
+    <div class="empty" id="readyEmpty" hidden>
+      <div class="num">00</div>
+      <div class="h">Nothing ready just yet</div>
+      <div class="sub">Numbers appear here the moment food is ready.</div>
+    </div>
+  </section>
+  <section class="col prep">
+    <div class="head"><div class="t">Preparing</div><div class="s" id="prepCount"></div></div>
+    <div class="grid" id="prep"></div>
+  </section>
+</div>
+
+<footer class="foot">
+  <img src="/qr.svg" alt="">
+  <div>
+    <div class="h">Get paged on your phone</div>
+    <div class="u">Scan, type your order number. No app.</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="conn" id="conn" hidden><span class="dot led"></span>Reconnecting…</div>
+</footer>
+
+<button class="start press" id="start" type="button"><span class="dot"></span>Tap to go fullscreen with sound</button>
+
+<script src="/common.js"></script>
+<script src="/board.js"></script>
+</body>
+</html>

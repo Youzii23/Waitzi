@@ -58,12 +58,15 @@ html, body { height: 100%; background: var(--paper); overscroll-behavior: none; 
 .eta { display: flex; justify-content: space-between; align-items: baseline; }
 .eta span:first-child { font: 500 13px var(--sans); color: var(--stone); }
 .eta span:last-child { font: 700 24px var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.eta.line span:last-child { font-size: 17px; font-weight: 600; }
 .bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .bar div { height: 100%; width: 0; background: var(--ink); transition: width 1s linear; }
 .sound { margin-top: 10px; height: 48px; border: 1px solid var(--line-2); border-radius: 14px; background: transparent; font: 500 14px var(--sans); display: flex; align-items: center; justify-content: center; gap: 8px; }
 .sound:active { transform: scale(.97); }
 .sound .dot { width: 7px; height: 7px; }
 .sound.off .dot { background: var(--line-2); }
+.sound.alerts { margin-top: 0; }
+.sound.alerts .dot { background: var(--ink); }
 
 /* ready */
 .ready { background: var(--sig); }
@@ -78,6 +81,13 @@ html, body { height: 100%; background: var(--paper); overscroll-behavior: none; 
 .ready p { margin: 14px 0 0; font: 500 17px var(--sans); animation: wz-rise .6s var(--ease) .7s both; }
 .got { height: 64px; border-radius: 20px; background: var(--ink); color: var(--paper); font: 600 18px var(--sans); display: flex; align-items: center; justify-content: center; gap: 10px; animation: wz-rise .6s var(--ease) .9s both; transition: transform .12s; }
 .got:active { transform: scale(.97); }
+.stop { margin-bottom: 10px; height: 56px; border: 1.5px solid var(--ink); border-radius: 18px; background: transparent; color: var(--ink); font: 600 16px var(--sans); display: flex; align-items: center; justify-content: center; gap: 10px; animation: wz-rise .6s var(--ease) .9s both; transition: transform .12s; }
+.stop:active { transform: scale(.97); }
+.stop .bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.stop .bars i { width: 3px; background: var(--ink); border-radius: 1px; animation: wz-eq .6s ease-in-out infinite alternate; }
+.stop .bars i:nth-child(2) { animation-delay: .2s; }
+.stop .bars i:nth-child(3) { animation-delay: .4s; }
+@keyframes wz-eq { from { height: 4px } to { height: 14px } }
 .ignite { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 
 /* done / not found */
@@ -125,10 +135,13 @@ html, body { height: 100%; background: var(--paper); overscroll-behavior: none; 
       <div class="sub" id="sub">We'll buzz you when it's ready.</div>
     </div>
     <div class="foot">
+      <div class="eta line"><span>In line</span><span id="ahead">–</span></div>
       <div class="eta"><span>Estimated wait</span><span id="eta">~10 min</span></div>
       <div class="bar"><div id="progress"></div></div>
       <button class="sound" id="sound" type="button"><span class="dot"></span><span id="soundLabel">Sound and vibration on</span></button>
-      <div class="fine" style="margin-top:0">Keep this page open. Put your phone down.</div>
+      <button class="sound alerts" id="alerts" type="button" hidden><span class="dot"></span>Alert me on the lock screen</button>
+      <div class="fine" id="iosHint" style="margin-top:0" hidden>iPhone: tap Share → Add to Home Screen to get alerts when your phone is locked.</div>
+      <div class="fine" id="keepOpen" style="margin-top:0">Keep this page open. Put your phone down.</div>
     </div>
   </section>
 
@@ -142,6 +155,7 @@ html, body { height: 100%; background: var(--paper); overscroll-behavior: none; 
         <h1>Your order<br>is ready</h1>
         <p>Come pick it up at the counter.</p>
       </div>
+      <button class="stop" id="stop" type="button" hidden><span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>Stop alarm</button>
       <button class="got" id="got" type="button">I've got it <span style="font-size:20px">→</span></button>
     </div>
     <div class="ignite" id="ignite"></div>

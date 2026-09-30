@@ -1,0 +1,28 @@
+# Render blueprint: New → Blueprint → pick this repo.
+# One instance with a small disk, so the queue, history and push keys survive restarts and deploys.
+services:
+  - type: web
+    name: waitzi
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/config
+    disk:
+      name: waitzi-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TZ
+        value: Europe/Copenhagen
+      - key: DATA_FILE
+        value: /var/data/state.json
+      - key: STAFF_KEY
+        generateValue: true
+      - key: VENUE_NAME
+        value: "Hallen · Stand 4"
+      - key: SIGNAL
+        value: amber
